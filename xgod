@@ -1,0 +1,384 @@
+#!/bin/bash
+
+# Function for add target
+function addtarget()
+{
+	# Check target argument
+	if [[ "$1" =~ ([A-Za-z]+)_([A-Za-z]+)$ ]]; then
+		extension=${BASH_REMATCH[1]}
+		target=${BASH_REMATCH[2]}
+	else
+		return 1
+	fi
+	if [[ -z "${TARGETS[$1]}" ]]; then
+		echo -e $C_ERROR$C_RED$C_BOLD"Нет цели '$target'"#C_END
+		exit
+	fi
+	# Check if the target already checked
+	for t in ${ALREADYCHECKED[@]}
+	do
+		if [[ "$t" == "$1" ]]; then
+			return 0
+		fi
+	done
+	ALREADYCHECKED+=( "$1" )
+	# Search check function
+	res=0
+	for t in "${TARGETSCHECK[@]}"
+	do
+		if [[ "$target" == "$t" ]]; then
+			res=1
+			break
+		fi
+	done
+	# If target have check function
+	if [[ $res -eq 1 ]]; then
+		eval "check_$target"
+		if [[ $? -eq 1 ]]; then
+			for t in ${TARGETDEPENDS[$1]};
+			do
+				find_extension $t
+				addtarget "$out"_"$t"
+			done
+		else
+			return 0
+		fi
+	# If this target exist
+	else
+		"$extension"_check "$1"
+		if [[ $? -eq 1 ]]; then
+			for t in ${TARGETDEPENDS[$1]};
+			do
+				find_extension $t
+				addtarget "$out"_"$t"
+			done
+		else
+			return 0
+		fi
+	# If error
+	fi
+	DO+=( $1 )
+	return 0
+}
+
+# Function for check completed target
+function target_check()
+{
+	return 1
+}
+
+# Function for do target
+function target_action()
+{
+	IFS="
+"
+	for line in ${TARGETS["$1"]}
+	do
+		eval "$line"
+	done
+	IFS=" "
+}
+
+function find_extension()
+{
+	out=""
+	if [ -z "$1" ]; then
+		return 1
+	fi
+	for e in ${EXTENSIONS[@]} target
+	do
+		if [[ -n "${TARGETS[""$e""_$1]}" ]]; then
+			out="$e"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Variables
+# Text factoring
+C_END="\033[0m"
+C_GREEN="\033[32m"
+C_YELLOW="\033[33m"
+C_RED="\033[31m"
+C_BOLD="\033[1m"
+C_OK="$C_GREEN[OK]:$C_END"
+C_WARNING="$C_YELLOW[Warning]:$C_END"
+C_WAIT="$C_YELLOW[Wait...]:$C_END"
+C_ERROR="$C_RED[ERROR]:$C_END"
+# Declare program arrays
+# Assocaitive arrays
+declare -A TARGETS
+declare -A TARGETDEPENDS
+# Usual arrays
+declare -a EXTENSIONS
+declare -a DO
+declare -a ALREADYCHECKED
+declare -a EXTENSIONSFILES
+declare -a TARGETSCHECK
+declare -a USERTARGETS
+# Declare arrays with user info
+declare -a USERVARIABLES
+# Define variables
+cur_extension=""
+cur_target=""
+func=""
+cur_check=0
+cur_action=0
+cur_command=0
+EXTENSIONSFILES=( "./package.xge" ) # Standart extensions
+
+
+
+# Main program
+# Parsing arguments
+for arg in ${@:2}
+do
+	# Parsing additionaly arguments
+	if [[ "$arg" =~ \-\-ext=(.+) ]]; then
+		EXTENSIONSFILES+=( "${BASH_REMATCH[1]}" )
+	# Parsing any variables set
+	elif [[ "$arg" =~ \-\-([A-Za-z]+)=(.+) ]]; then
+		USERVARIABLES+=( "${BASH_REMATCH[1]}"="\"${BASH_REMATCH[2]}\"" )
+	elif [[ "$arg" =~ ^[A-Za-z]+$ ]]; then
+		USERTARGETS+=( "${BASH_REMATCH[0]}" )
+	fi
+done
+
+
+
+# Check extensions files
+for ef in ${EXTENSIONSFILES[@]}
+do
+	if [ ! -f "$ef" ]; then
+		echo -e $C_ERROR$C_BOLD$C_RED"Нет файла расширения \"$ef\""$C_END
+		exit
+	fi
+done
+# Parsing extensions files
+for ef in ${EXTENSIONSFILES[@]}
+do
+	cur_extension=""
+	string_number=1
+	IFS="
+"
+	for line in $(cat $ef)
+	do
+		# Extension name parsing
+		if [[ "$line" =~ ^name\ ([A-Za-z]+)[\ \	]*$ ]]; then
+			# Check if extension name in file declare more than one time
+			if [ -n "$cur_extension" ]; then
+				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$ef\":\nСтрока: $string_number\nПовторное указание имени расширения"$C_END
+				exit
+			fi
+			# Check if previous string is a bash function
+			if [[ "$cur_command" -eq 1 ]]; then
+				func+=" #"
+				eval "$func"
+				func=""
+				cur_command=0
+			fi
+			# Check if file have equal extension name with previews extension
+			IFS=" "
+			for ext in ${EXTENSIONS[@]}
+			do
+				if [[ "$ext" == "${BASH_REMATCH[1]}" ]]; then
+					echo =e $C_ERROR$C_RED$C_BOLD"Файл \"$ef\":\nСтрока: $string_number\nДанное расширение уже добавлено"$C_END
+					exit
+				fi
+			done
+			IFS="
+"
+			# Add extension name
+			cur_extension="${BASH_REMATCH[1]}"
+			EXTENSIONS+=( "$cur_extension" )
+		# Extension check function parsing
+		elif [[ "$line" =~ ^check[\ \	]*$ ]]; then
+			# Check if extension name doesn't declare
+			if [ -z "$cur_extension" ]; then
+				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$e\":\nСтрока: $string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\"" $C_END
+				exit
+			fi
+			# Check if previous string is a bash function
+			if [[ "$cur_command" -eq 1 ]]; then
+				func+=" #"
+				eval "$func"
+				func=""
+				cur_command=0
+			fi
+			func="function ""$cur_extension""_check(){"
+			cur_check=1
+		elif [[ "$line" == "endcheck" && "$cur_check" -eq 1 ]]; then
+			func+="}"
+			eval "$func"
+			func=""
+			cur_check=0
+		# Extension action function parsing
+		elif [[ "$line" =~ ^action[\ \	]*$ ]]; then
+			# Check if extension name doesn't declare
+			if [ -z "$cur_extension" ]; then
+				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$e\":\nСтрока: $string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\"" $C_END
+				exit
+			fi
+			# Check if previous string is a bash function
+			if [[ "$cur_command" -eq 1 ]]; then
+				func+=" #"
+				eval "$func"
+				func=""
+				cur_command=0
+			fi
+			func="function ""$cur_extension""_action(){"
+			cur_action=1
+		elif [[ "$line" == "endaction" && "$cur_action" -eq 1 ]]; then
+			func+="}"
+			eval "$func"
+			func=""
+			cur_action=0
+		# If function is writting
+		elif [[ $cur_check -eq 1 || $cur_action -eq 1 || $cur_command -eq 1 ]]; then
+			func+=$(echo "$line" | sed "s/\t+//g")"
+"
+		# Another strings
+		else
+			cur_command=1
+			func="$line
+"
+		fi
+		string_number=$(expr $string_number + 1)
+	done
+	IFS=" "
+done
+# Check if previous string is a bash function
+if [[ "$cur_command" -eq 1 ]]; then
+	func+=" #"
+	eval "$func"
+	func=""
+	cur_command=0
+fi
+# Check definition function
+for e in ${EXTENSIONS[@]}
+do
+	if [[ -z $(type "$e""_action") ]]; then
+		echo -e $C_ERROR$C_RED$C_BOLD"В расширении $e отсутствует функция выполнения цели"$C_END
+		exit
+	fi
+	if [[ -z $(type "$e""_check") ]]; then
+		echo -e $C_ERROR$C_RED$C_BOLD"В расширении $e отсутствует функция проверки цели"$C_END
+		exit
+	fi
+done
+
+
+
+# Check existing build file
+if [ ! -f "$1" ]; then
+	echo -e $C_ERROR$C_RED$C_BOLD"Файл сборки '$1' не существует"$C_END
+	exit
+fi
+# Parsing build file
+cur_action=0
+cur_check=0
+cur_command=0
+cur_extension=""
+cur_target=""
+func=""
+extensionslist=$(echo "${EXTENSIONS[@]} target" | sed "s/ /|/g")
+file=$(cat "$1" | sed -e "/^$/d" -e "/^[\	\ ]*$/d" -e "/^[\	\ ]*#.*$/d")
+IFS="
+"
+for line in $file
+do
+	# Targets parsing
+	if [[ "$line" =~ ^($extensionslist)\ ([A-Za-z]+):([A-Za-z\ ]*)$ ]]; then
+		# Search for duplicate
+		find_extension ${BASH_REMATCH[2]}
+		if [[ $? -eq 0 ]]; then
+			echo -e $C_ERROR$C_RED$C_BOLD"Цель ${BASH_REMATCH[2]} уже была объявлена"$C_END
+			exit
+		fi
+		# If previous strings are target
+		if [[ -n "$cur_target" ]]; then
+			if [[ -z "$func" ]]; then
+				func="#"
+			fi
+			TARGETS[$cur_target]="$func"
+			func=""
+			cur_target=""
+		fi
+		TARGETDEPENDS[${BASH_REMATCH[1]}_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
+		cur_target=${BASH_REMATCH[1]}_${BASH_REMATCH[2]}
+	# Targets check functions parsing
+	elif [[ "$line" =~ ^check\ ([A-Za-z]+)\(\)[\ \	]*$ ]]; then
+		if [[ -n "$cur_target" ]]; then
+			if [[ -z "$func" ]]; then
+				func="#"
+			fi
+			TARGETS[$cur_target]="$func"
+			func=""
+			cur_target=""
+		fi
+		TARGETSCHECK+=( ${BASH_REMATCH[1]} )
+		func="function check_${BASH_REMATCH[1]}(){"
+		cur_check=1
+	elif [[ "$line" == "endcheck" ]]; then
+		func+="}"
+		eval "$func"
+		func=""
+		cur_check=0
+	# Add strings for target or for check function
+	elif [[ $cur_check -eq 1 || -n $cur_target ]]; then
+		func+=$(echo $line | sed "s/[\	]+//g")"
+"
+	# Another strings
+	else
+		eval "$line"
+	fi
+done
+IFS=" "
+# If previous strings are target 
+if [[ -n "$cur_target" ]]; then
+	if [[ -z "$func" ]]; then
+		func="#"
+	fi
+	TARGETS[$cur_target]="$func"
+	func=""
+	cur_target=""
+fi
+
+# Add targets to list for execute
+for t in ${USERTARGETS[@]}
+do
+	find_extension $t
+	if [[ $? -eq 1 ]]; then
+		echo -e $C_ERROR$C_RED$C_BOLD"Не найдена цель '$t'"$C_END
+		exit
+	else
+		addtarget "$out"_"$t"
+	fi
+done
+
+
+
+# Add user variables
+for t in ${USERVARIABLES}
+do
+	eval "$t"
+done
+
+
+
+# Do targets
+for t in ${DO[@]}
+do
+	# Check target argument
+	if [[ "$t" =~ ([A-Za-z]+)_([A-Za-z]+)$ ]]; then
+		extension=${BASH_REMATCH[1]}
+		target=${BASH_REMATCH[2]}
+	else
+		return 1
+	fi
+	echo -e $C_WAIT$C_BOLD"Выполняется цель '$target'"$C_END
+	if [[ -n ${TARGETS[$t]} ]]; then
+		"$extension"_action $t
+	fi
+done

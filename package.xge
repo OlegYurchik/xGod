@@ -1,0 +1,123 @@
+name package
+
+# Identify distribution
+function getDistributionName()
+{
+	out=$(lsb_release -i | sed "s/Distributor\ ID://g")
+	return 0
+}
+
+# Check exist package in repository
+function checkPackageExist()
+{
+	if [ -z "$1" ]; then
+		return 1
+	fi
+	if [[ "$($(echo $PACKAGESEARCH | sed "s/%%%/$1/g"))" =~ "$(echo $PACKAGESEARCHEXP | sed "s/%%%/$1/g")" ]]; then
+		echo -e $C_OK$C_GREEN$C_BOLD"'$1' присутствует в репозитории"$C_END
+		return 0
+	fi
+	echo -e $C_OK$C_RED"'$1' не присутствует в репозитории"$C_END
+	return 1
+}
+
+function checkInstall()
+{
+	if [[ $($(echo "$PACKAGEISINSTALL" | sed "s/%%%/$1/g")) =~ $(echo "$PACKAGEISINSTALLEXP" | sed "s/%%%/$1/g") ]]; then
+		echo -e $C_OK$C_GREEN$C_BOLD"'$1' установлен"$C_END
+		return 0
+	fi
+	echo -e $C_OK$C_RED$C_BOLD"'$1' не установлен"$C_END
+	return 1
+}
+
+# Identify distribution of Linux
+getDistributionName
+DISTRIBUTION=${out,,}
+if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" ]]; then
+	PACKAGESEARCH="apt-cache show %%%"
+	PACKAGESEARCHEXP="Package: %%%"
+	PACKAGEISINSTALL="dpkg -s %%%"
+	PACKAGEISINSTALLEXP="Package: %%%"
+	PACKAGEINSTALL="apt-get install %%%"
+fi
+
+action
+	if [ -z "$1" ]; then
+		return 1
+	fi
+	cur_distr=""
+	declare -A PACKAGES
+	IFS="
+"
+	for line in ${TARGETS[$1]}
+	do
+		if [[ "$line" =~ ^\	([A-Za-z]+):[\ \	]*$ ]]; then
+			cur_distr=${BASH_REMATCH[1]}
+		elif [[ "$line" =~ ^\	\	([A-Za-z]+):\ ([A-Za-z][0-9A-Za-z\-]*)$ ]]; then
+			if [[ -z "$cur_distr" ]]; then
+				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
+			fi
+			PACKAGES["$cur_distr"_${BASH_REMATCH[1]}]=${BASH_REMATCH[2]}
+		else
+			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"
+			exit
+		fi
+	done
+	IFS=" "
+	if [[ -n "${PACKAGES[$DISTRIBUTION"_"name]}" ]]; then
+		echo -e $C_OK$C_BOLD"Установка пакета '${PACKAGES[$DISTRIBUTION""_name]}' ..."$C_END
+		eval "$(echo $PACKAGEINSTALL | sed "s/%%%/${PACKAGES[$DISTRIBUTION"_"name]}/g")"
+		echo -e $C_OK$C_BOLD$C_GREEN"Пакет '${PACKAGES[$DISTRIBUTION"_"name]}' установлен"$C_END
+		return 0
+	# If this package exist without distribution name
+	elif [[ -n "${PACKAGES[all_name]}" ]]; then 
+		echo -e $C_OK$C_BOLD"Установка пакета '${PACKAGES[all_name]}' ..."$C_END
+		eval "$(echo $PACKAGEINSTALL | sed "s/%%%/${PACKAGES[all_name]}/g")"
+		echo -e $C_OK$C_BOLD$C_GREEN"Пакет '${PACKAGES[all_name]}' установлен"$C_END
+		return 0
+	else
+		echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"
+		exit
+	fi
+endaction
+check
+	if [ -z "$1" ]; then
+		return 1
+	fi
+	cur_distr=""
+	declare -A PACKAGES
+	IFS="
+"
+	for line in ${TARGETS[$1]}
+	do
+		if [[ "$line" =~ ^\	([A-Za-z]+):[\ \	]*$ ]]; then
+			cur_distr=${BASH_REMATCH[1]}
+		elif [[ "$line" =~ ^\	\	([A-Za-z]+):\ ([A-Za-z][0-9A-Za-z\-]*)$ ]]; then
+			if [[ -z "$cur_distr" ]]; then
+				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
+			fi
+			PACKAGES["$cur_distr"_${BASH_REMATCH[1]}]=${BASH_REMATCH[2]}
+		else
+			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"
+			exit
+		fi
+	done
+	IFS=" "
+	if [[ -n "${PACKAGES[$DISTRIBUTION"_"name]}" ]]; then
+		checkInstall "${PACKAGES[$DISTRIBUTION"_"name]}"
+		if [[ $? -eq 0 ]]; then
+			return 0
+		fi
+	# If this package exist without distribution name
+	elif [[ -n "${PACKAGES[all_name]}" ]]; then 
+		checkInstall "${PACKAGES[all_name]}"
+		if [[ $? -eq 0 ]]; then
+			return 0
+		fi
+	else
+		echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"
+		exit
+	fi
+	return 1
+endcheck
