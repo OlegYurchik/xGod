@@ -3,7 +3,7 @@ name package
 # Identify distribution
 function getDistributionName()
 {
-	out=$(lsb_release -i | sed "s/Distributor\ ID://g")
+	out=$(lsb_release -i | sed "s/Distributor\ ID:\	//g")
 	return 0
 }
 
