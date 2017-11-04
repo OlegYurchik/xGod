@@ -4,7 +4,7 @@
 function addtarget()
 {
 	# Check target argument
-	if [[ "$1" =~ ([A-Za-z]+)_([A-Za-z]+)$ ]]; then
+	if [[ "$1" =~ ([A-Za-z].[A-Za-z0-9]*)_([A-Za-z]+)$ ]]; then
 		extension=${BASH_REMATCH[1]}
 		target=${BASH_REMATCH[2]}
 	else
@@ -126,7 +126,7 @@ func=""
 cur_check=0
 cur_action=0
 cur_command=0
-EXTENSIONSFILES=( "./package.xge" ) # Standart extensions
+EXTENSIONSFILES=( "./extensions/package.xge" "./extensions/pip3.xge" ) # Standart extensions
 
 
 
@@ -165,7 +165,7 @@ do
 	for line in $(cat $ef)
 	do
 		# Extension name parsing
-		if [[ "$line" =~ ^name\ ([A-Za-z]+)[\ \	]*$ ]]; then
+		if [[ "$line" =~ ^name\ ([A-Za-z].[A-Za-z0-9]*)[\ \	]*$ ]]; then
 			# Check if extension name in file declare more than one time
 			if [ -n "$cur_extension" ]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$ef\":\nСтрока: $string_number\nПовторное указание имени расширения"$C_END
@@ -196,7 +196,7 @@ do
 		elif [[ "$line" =~ ^check[\ \	]*$ ]]; then
 			# Check if extension name doesn't declare
 			if [ -z "$cur_extension" ]; then
-				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$e\":\nСтрока: $string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\"" $C_END
+				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$e\":\nСтрока: $string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\")" $C_END
 				exit
 			fi
 			# Check if previous string is a bash function
@@ -366,16 +366,13 @@ do
 done
 
 
-
 # Do targets
 for t in ${DO[@]}
-do
+do	
 	# Check target argument
-	if [[ "$t" =~ ([A-Za-z]+)_([A-Za-z]+)$ ]]; then
+	if [[ "$t" =~ ([A-Za-z0-9]+)_([A-Za-z]+)$ ]]; then
 		extension=${BASH_REMATCH[1]}
 		target=${BASH_REMATCH[2]}
-	else
-		return 1
 	fi
 	echo -e $C_WAIT$C_BOLD"Выполняется цель '$target'"$C_END
 	if [[ -n ${TARGETS[$t]} ]]; then

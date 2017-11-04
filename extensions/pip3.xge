@@ -1,0 +1,74 @@
+name pip3
+
+enablevenv=false
+venvname=venv
+venvdir=.
+
+check
+	if [ -z "$1" ]; then
+		return 1
+	fi
+	IFS="
+"
+	name=""
+	for line in ${TARGETS[$1]}
+	do
+		if [[ "$line" =~ ^\	name:\ ([A-Za-z0-9]+)$ ]]; then
+			name=${BASH_REMATCH[1]}
+		elif ! [[ "$line" =~ ^\	version:\ (==)?([0-9\.]+)$ ]]; then
+			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END	
+			exit
+		fi
+	done
+	IFS=" "
+	if [[ $enablevenv = true ]]; then
+		result=$(source "$venvdir/$venvname/bin/activate" 2>&1)			
+		if [ -n "$result" ]; then
+			echo -e $C_ERROR$C_RED$C_BOLD"Не удалось запустить виртуальное окружение '$venvname' из папки '$venvdir'"$C_END
+			return 1	
+		fi
+		source "$venvdir/$venvname/bin/activate"
+	fi
+	if [ -n "$(pip3 list 2>/dev/null | sed -e "/^$name/Ib" -e d)" ]; then
+		echo -e $C_OK$C_GREEN$C_BOLD"'$name' (Python пакет) установлен"$C_END		
+		return 0
+	fi
+	if [[ $enablevenv = true ]]; then
+		deactivate	
+	fi
+	echo -e $C_ERROR$C_RED$C_BOLD"'$name' (Python пакет) не установлен"$C_END
+	return 1
+endcheck
+
+action
+	IFS="
+"
+	name=""
+	equal=""
+	version=""
+	for line in ${TARGETS[$1]}
+	do
+		if [[ "$line" =~ ^\	name:\ ([A-Za-z0-9]+)$ ]]; then
+			name=${BASH_REMATCH[1]}
+		elif [[ "$line" =~ ^\	version:\ (==)?([0-9\.]+)$ ]]; then
+			equal=${BASH_REMATCH[1]}
+			version=${BASH_REMATCH[2]}
+		else
+			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END
+			exit
+		fi
+	done
+	IFS=" "
+	if [[ $enablevenv = true ]]; then
+		result=$(source "$venvdir/$venvname/bin/activate" 2>&1)
+		if [ -n "$result" ]; then
+			echo -e $C_ERROR$C_RED$C_BOLD"Не удалось запустить виртуальное окружение '$venvname' из папки '$venvdir'"$C_END
+			return 1	
+		fi
+		source "$venvdir/$venvname/bin/activate"
+	fi
+	pip3 install $name$equal$version
+	if [[ $enablevenv = true ]]; then
+		deactivate	
+	fi
+endaction
