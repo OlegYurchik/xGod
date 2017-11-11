@@ -41,6 +41,14 @@ function checkInstall()
 	return 1
 }
 
+function changeUser()
+{
+	if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" ]]; then
+		command="sudo -u $1"
+	fi
+	echo $command
+}
+
 # Identify distribution of Linux
 getDistributionName
 DISTRIBUTION=${out,,}
@@ -64,7 +72,7 @@ action
 	do
 		if [[ "$line" =~ ^\	([A-Za-z]+):[\ \	]*$ ]]; then
 			cur_distr=${BASH_REMATCH[1]}
-		elif [[ "$line" =~ ^\	\	([A-Za-z]+):\ ([A-Za-z][\.0-9A-Za-z\-]+)$ ]]; then
+		elif [[ "$line" =~ ^\	\	([A-Za-z]+):\ ([A-Za-z][\+\.0-9A-Za-z\-]*)$ ]]; then
 			if [[ -z "$cur_distr" ]]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
 			fi

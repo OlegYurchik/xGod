@@ -13,7 +13,7 @@ check
 	name=""
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	name:\ ([A-Za-z0-9]+)$ ]]; then
+		if [[ "$line" =~ ^\	name:\ ([A-Za-z][A-Za-z0-9\-\.]+)$ ]]; then
 			name=${BASH_REMATCH[1]}
 		elif ! [[ "$line" =~ ^\	version:\ (==)?([0-9\.]+)$ ]]; then
 			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END	
@@ -48,7 +48,7 @@ action
 	version=""
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	name:\ ([A-Za-z0-9]+)$ ]]; then
+		if [[ "$line" =~ ^\	name:\ ([A-Za-z][A-Za-z0-9\-\.]+)$ ]]; then
 			name=${BASH_REMATCH[1]}
 		elif [[ "$line" =~ ^\	version:\ (==)?([0-9\.]+)$ ]]; then
 			equal=${BASH_REMATCH[1]}
