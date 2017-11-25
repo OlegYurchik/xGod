@@ -70,12 +70,8 @@ function target_check()
 # Function for do target
 function target_action()
 {
-	IFS="
-"
-	for line in ${TARGETS["$1"]}
-	do
-		eval "$line"
-	done
+	IFS=""
+	eval "${TARGETS["$1"]}"
 	IFS=" "
 }
 
