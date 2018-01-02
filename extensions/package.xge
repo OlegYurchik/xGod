@@ -43,7 +43,7 @@ function checkInstall()
 
 function changeUser()
 {
-	if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" ]]; then
+	if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" || $DISTRIBUTION=="linuxmint" ]]; then
 		command="sudo -u $1"
 	fi
 	echo $command
@@ -52,7 +52,7 @@ function changeUser()
 # Identify distribution of Linux
 getDistributionName
 DISTRIBUTION=${out,,}
-if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" ]]; then
+if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" || $DISTRIBUTION=="linuxmint" ]]; then
 	PACKAGESEARCH="apt-cache show %%%"
 	PACKAGESEARCHEXP="Package: %%%"
 	PACKAGEISINSTALL="dpkg -s %%%"
