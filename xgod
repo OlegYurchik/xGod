@@ -285,7 +285,7 @@ IFS="
 for line in $file
 do
 	# Targets parsing
-	if [[ "$line" =~ ^($extensionslist)\ ([A-Za-z]+):([A-Za-z\ ]*)$ ]]; then
+	if [[ "$line" =~ ^($extensionslist)\ ([A-Za-z0-9]+):([A-Za-z0-9\ ]*)$ ]]; then
 		# Search for duplicate
 		find_extension ${BASH_REMATCH[2]}
 		if [[ $? -eq 0 ]]; then

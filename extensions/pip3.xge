@@ -1,9 +1,5 @@
 name pip3
 
-enablevenv=false
-venvname=venv
-venvdir=.
-
 check
 	if [ -z "$1" ]; then
 		return 1
@@ -11,11 +7,17 @@ check
 	IFS="
 "
 	name=""
+    venvname=""
+    venvdir=""
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	name:\ ([A-Za-z][A-Za-z0-9\-\.]+)$ ]]; then
+		if [[ "$line" =~ ^\	|\ {4}name:[\ \	]*([A-Za-z][A-Za-z0-9\-\.]+)$ ]]; then
 			name=${BASH_REMATCH[1]}
-		elif ! [[ "$line" =~ ^\	version:\ (==)?([0-9\.]+)$ ]]; then
+        elif [[ "$line" =~ ^\	|\ {4}venvname:[\ \	]*([^\ \    ].*)$ ]]; then
+            venvname=${BASH_REMATCH[1]}
+        elif [[ "$line" =~ ^\	|\ {4}venvdir:[\ \	]*([^\ \    ].*)$ ]]; then
+            venvdir=${BASH_REMATCH[1]}
+		elif ! [[ "$line" =~ ^\	|\ {4}version:[\ \	]*(==)?([0-9\.]+)$ ]]; then
 			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END	
 			exit
 		fi
@@ -46,20 +48,26 @@ action
 	name=""
 	equal=""
 	version=""
+    venvname=""
+    venvdir=""
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	name:\ ([A-Za-z][A-Za-z0-9\-\.]+)$ ]]; then
+		if [[ "$line" =~ ^[\ \	]*name:[\ \	]*([A-Za-z][A-Za-z0-9\-\.]+)$ ]]; then
 			name=${BASH_REMATCH[1]}
-		elif [[ "$line" =~ ^\	version:\ (==)?([0-9\.]+)$ ]]; then
+		elif [[ "$line" =~ ^\	|\ {4}version:[\ \	]*(==)?([0-9\.]+)$ ]]; then
 			equal=${BASH_REMATCH[1]}
 			version=${BASH_REMATCH[2]}
+        elif [[ "$line" =~ ^\	|\ {4}venvname:[\ \	]*([^\ \    ].*)$ ]]; then
+            venvname=${BASH_REMATCH[1]}
+        elif [[ "$line" =~ ^\	|\ {4}venvdir:[\ \	]*([^\ \    ].*)$ ]]; then
+            venvdir=${BASH_REMATCH[1]}
 		else
 			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END
 			exit
 		fi
 	done
 	IFS=" "
-	if [[ $enablevenv = true ]]; then
+	if [ -n "$venvname" ]; then
 		result=$(source "$venvdir/$venvname/bin/activate" 2>&1)
 		if [ -n "$result" ]; then
 			echo -e $C_ERROR$C_RED$C_BOLD"Не удалось запустить виртуальное окружение '$venvname' из папки '$venvdir'"$C_END
@@ -68,7 +76,7 @@ action
 		source "$venvdir/$venvname/bin/activate"
 	fi
 	pip3 install $name$equal$version
-	if [[ $enablevenv = true ]]; then
+	if [ -n "$venvname" ]; then
 		deactivate	
 	fi
 endaction
