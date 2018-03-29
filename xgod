@@ -142,7 +142,6 @@ do
 done
 
 
-
 # Check extensions files
 for ef in ${EXTENSIONSFILES[@]}
 do
@@ -356,7 +355,7 @@ done
 
 
 # Add user variables
-for t in ${USERVARIABLES}
+for t in ${USERVARIABLES[@]}
 do
 	eval "$t"
 done

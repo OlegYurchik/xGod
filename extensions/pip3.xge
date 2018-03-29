@@ -11,7 +11,7 @@ check
     venvdir=""
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	|\ {4}name:[\ \	]*([A-Za-z][A-Za-z0-9\-\.]+)$ ]]; then
+		if [[ "$line" =~ ^\	|\ {4}name:[\ \	]*([A-Za-z][\-\.A-Za-z0-9]+)$ ]]; then
 			name=${BASH_REMATCH[1]}
         elif [[ "$line" =~ ^\	|\ {4}venvname:[\ \	]*([^\ \    ].*)$ ]]; then
             venvname=${BASH_REMATCH[1]}
@@ -23,11 +23,11 @@ check
 		fi
 	done
 	IFS=" "
-	if [[ $enablevenv = true ]]; then
+	if [ -n "$venvname" ]; then
 		result=$(source "$venvdir/$venvname/bin/activate" 2>&1)			
 		if [ -n "$result" ]; then
 			echo -e $C_ERROR$C_RED$C_BOLD"Не удалось запустить виртуальное окружение '$venvname' из папки '$venvdir'"$C_END
-			return 1	
+			return 1
 		fi
 		source "$venvdir/$venvname/bin/activate"
 	fi
@@ -35,7 +35,7 @@ check
 		echo -e $C_OK$C_GREEN$C_BOLD"'$name' (Python пакет) установлен"$C_END		
 		return 0
 	fi
-	if [[ $enablevenv = true ]]; then
+	if [ -n "$venvname" ]; then
 		deactivate	
 	fi
 	echo -e $C_ERROR$C_RED$C_BOLD"'$name' (Python пакет) не установлен"$C_END
@@ -52,7 +52,7 @@ action
     venvdir=""
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^[\ \	]*name:[\ \	]*([A-Za-z][A-Za-z0-9\-\.]+)$ ]]; then
+		if [[ "$line" =~ ^\	|\ {4}name:[\ \	]*([A-Za-z][\-\.A-Za-z0-9]+)$ ]]; then
 			name=${BASH_REMATCH[1]}
 		elif [[ "$line" =~ ^\	|\ {4}version:[\ \	]*(==)?([0-9\.]+)$ ]]; then
 			equal=${BASH_REMATCH[1]}
