@@ -11,13 +11,13 @@ check
     venvdir=""
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	|\ {4}name:[\ \	]*([A-Za-z][\-\.A-Za-z0-9]+)$ ]]; then
+		if [[ "$line" =~ ^\ {4}name:[[:blank:]]*([[:alpha:]][[[:alnum:]]\-\.]+)$ ]]; then
 			name=${BASH_REMATCH[1]}
-        elif [[ "$line" =~ ^\	|\ {4}venvname:[\ \	]*([^\ \    ].*)$ ]]; then
+        elif [[ "$line" =~ ^\ {4}venvname:[[:blank:]]*([^[[:blank:]]]*)$ ]]; then
             venvname=${BASH_REMATCH[1]}
-        elif [[ "$line" =~ ^\	|\ {4}venvdir:[\ \	]*([^\ \    ].*)$ ]]; then
+        elif [[ "$line" =~ ^\ {4}venvdir:[[:blank:]]*([^[[:blank:]]]*)$ ]]; then
             venvdir=${BASH_REMATCH[1]}
-		elif ! [[ "$line" =~ ^\	|\ {4}version:[\ \	]*(==)?([0-9\.]+)$ ]]; then
+		elif ! [[ "$line" =~ ^\ {4}version:[[:blank:]]*(==)?([[[:digit:]]\.]+)$ ]]; then
 			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END	
 			exit
 		fi
@@ -52,14 +52,14 @@ action
     venvdir=""
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	|\ {4}name:[\ \	]*([A-Za-z][\-\.A-Za-z0-9]+)$ ]]; then
+		if [[ "$line" =~ ^\ {4}name:[[:blank:]]*([[:alpha:]][[[:alnum:]]\.\+\-]+)$ ]]; then
 			name=${BASH_REMATCH[1]}
-		elif [[ "$line" =~ ^\	|\ {4}version:[\ \	]*(==)?([0-9\.]+)$ ]]; then
+		elif [[ "$line" =~ ^\ {4}version:[[:blank:]]*(==)?([[[:digit:]]\.]+)$ ]]; then
 			equal=${BASH_REMATCH[1]}
 			version=${BASH_REMATCH[2]}
-        elif [[ "$line" =~ ^\	|\ {4}venvname:[\ \	]*([^\ \    ].*)$ ]]; then
+        elif [[ "$line" =~ ^\ {4}venvname:[[:blank:]]*([^[[:blank:]]]*)$ ]]; then
             venvname=${BASH_REMATCH[1]}
-        elif [[ "$line" =~ ^\	|\ {4}venvdir:[\ \	]*([^\ \    ].*)$ ]]; then
+        elif [[ "$line" =~ ^\ {4}venvdir:[[:blank:]]*([^[[:blank:]]]*)$ ]]; then
             venvdir=${BASH_REMATCH[1]}
 		else
 			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END

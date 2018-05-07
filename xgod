@@ -4,7 +4,7 @@
 function addtarget()
 {
 	# Check target argument
-	if [[ "$1" =~ ([A-Za-z].[A-Za-z0-9]*)_([A-Za-z]+)$ ]]; then
+	if [[ "$1" =~ ^([[:alpha:]][[:alnum:]]*)_([[:alnum:]]+)$ ]]; then
 		extension=${BASH_REMATCH[1]}
 		target=${BASH_REMATCH[2]}
 	else
@@ -131,12 +131,12 @@ EXTENSIONSFILES=( "./extensions/package.xge" "./extensions/pip3.xge" ) # Standar
 for arg in ${@:2}
 do
 	# Parsing additionaly arguments
-	if [[ "$arg" =~ \-\-ext=(.+) ]]; then
+	if [[ "$arg" =~ ^--ext=(.+)$ ]]; then
 		EXTENSIONSFILES+=( "${BASH_REMATCH[1]}" )
 	# Parsing any variables set
-	elif [[ "$arg" =~ \-\-([A-Za-z]+)=(.+) ]]; then
+	elif [[ "$arg" =~ ^--([[:alnum:]]+)=(.+)$ ]]; then
 		USERVARIABLES+=( "${BASH_REMATCH[1]}"="\"${BASH_REMATCH[2]}\"" )
-	elif [[ "$arg" =~ ^[A-Za-z]+$ ]]; then
+	elif [[ "$arg" =~ ^[[:alnum:]]+$ ]]; then
 		USERTARGETS+=( "${BASH_REMATCH[0]}" )
 	fi
 done
@@ -160,7 +160,7 @@ do
 	for line in $(cat $ef)
 	do
 		# Extension name parsing
-		if [[ "$line" =~ ^name\ ([A-Za-z].[A-Za-z0-9]*)[\ \	]*$ ]]; then
+		if [[ "$line" =~ ^name[[:blank:]]+([[:alpha:]][[:alnum:]]*)[[:blank:]]*$ ]]; then
 			# Check if extension name in file declare more than one time
 			if [ -n "$cur_extension" ]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$ef\":\nСтрока: $string_number\nПовторное указание имени расширения"$C_END
@@ -188,7 +188,7 @@ do
 			cur_extension="${BASH_REMATCH[1]}"
 			EXTENSIONS+=( "$cur_extension" )
 		# Extension check function parsing
-		elif [[ "$line" =~ ^check[\ \	]*$ ]]; then
+		elif [[ "$line" =~ ^check[[:blank:]]*$ ]]; then
 			# Check if extension name doesn't declare
 			if [ -z "$cur_extension" ]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$e\":\nСтрока: $string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\")" $C_END
@@ -209,7 +209,7 @@ do
 			func=""
 			cur_check=0
 		# Extension action function parsing
-		elif [[ "$line" =~ ^action[\ \	]*$ ]]; then
+		elif [[ "$line" =~ ^action[[:alpha:]]*$ ]]; then
 			# Check if extension name doesn't declare
 			if [ -z "$cur_extension" ]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Файл \"$e\":\nСтрока: $string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\"" $C_END
@@ -278,13 +278,13 @@ cur_extension=""
 cur_target=""
 func=""
 extensionslist=$(echo "${EXTENSIONS[@]} target" | sed "s/ /|/g")
-file=$(cat "$1" | sed -e "/^$/d" -e "/^[\	\ ]*$/d" -e "/^[\	\ ]*#.*$/d")
+file=$(cat "$1" | sed -e "/^$/d" -e "/^[[:blank:]]*$/d" -e "/^[[:blank:]]*#.*$/d")
 IFS="
 "
 for line in $file
 do
 	# Targets parsing
-	if [[ "$line" =~ ^($extensionslist)\ ([A-Za-z0-9]+):([A-Za-z0-9\ ]*)$ ]]; then
+	if [[ "$line" =~ ^($extensionslist)[[:blank:]]+([[:alnum:]]+):([[[:alnum:]]\ ]*)$ ]]; then
 		# Search for duplicate
 		find_extension ${BASH_REMATCH[2]}
 		if [[ $? -eq 0 ]]; then
@@ -303,7 +303,7 @@ do
 		TARGETDEPENDS[${BASH_REMATCH[1]}_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
 		cur_target=${BASH_REMATCH[1]}_${BASH_REMATCH[2]}
 	# Targets check functions parsing
-	elif [[ "$line" =~ ^check\ ([A-Za-z]+)\(\)[\ \	]*$ ]]; then
+	elif [[ "$line" =~ ^check[[:blank:]]+([[:alpha:]]+)\(\)[[:blank:]]*$ ]]; then
 		if [[ -n "$cur_target" ]]; then
 			if [[ -z "$func" ]]; then
 				func="#"
@@ -365,7 +365,7 @@ done
 for t in ${DO[@]}
 do	
 	# Check target argument
-	if [[ "$t" =~ ([A-Za-z0-9]+)_([A-Za-z]+)$ ]]; then
+	if [[ "$t" =~ ([[:alnum:]]+)_([[:alnum:]]+)$ ]]; then
 		extension=${BASH_REMATCH[1]}
 		target=${BASH_REMATCH[2]}
 	fi

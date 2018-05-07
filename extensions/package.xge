@@ -70,9 +70,9 @@ action
 "
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	|\ {4}([A-Za-z]+):[\	\ ]*$ ]]; then
+		if [[ "$line" =~ ^\ {4}([[:alpha:]]+):[[:blank:]]*$ ]]; then
 			cur_distr=${BASH_REMATCH[1]}
-		elif [[ "$line" =~ ^\ {8}([A-Za-z]+):[\	\ ]*([A-Za-z][\+\.0-9A-Za-z\-]*)$ ]]; then
+		elif [[ "$line" =~ ^\ {8}([[:alpha:]]+):[[:blank:]]*([[:alpha:]][[:print:]]*)$ ]]; then
 			if [[ -z "$cur_distr" ]]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
 			fi
@@ -109,9 +109,9 @@ check
 "
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\	|\ {4}([A-Za-z]+):[\ \	]*$ ]]; then
+		if [[ "$line" =~ ^\ {4}([[:alpha:]]+):[[:blank:]]*$ ]]; then
 			cur_distr=${BASH_REMATCH[1]}
-		elif [[ "$line" =~ ^\ {8}([A-Za-z]+):[\ \	]*([A-Za-z][\+\.0-9A-Za-z\-]*)$ ]]; then
+		elif [[ "$line" =~ ^\ {8}([[:alpha:]]+):[[:blank:]]*([[:alpha:]][[[:alnum:]]\.\+\-]*)$ ]]; then
 			if [[ -z "$cur_distr" ]]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
 			fi
