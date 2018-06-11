@@ -4,7 +4,7 @@
 function addtarget()
 {
 	# Check target argument
-	if [[ "$1" =~ ^([[:alpha:]][[:alnum:]]*)_([[:alnum:]]+)$ ]]; then
+	if [[ "$1" =~ ^($extensionslist)_([[:graph:]]+)$ ]]; then
 		extension=${BASH_REMATCH[1]}
 		target=${BASH_REMATCH[2]}
 	else
@@ -136,7 +136,7 @@ do
 	# Parsing any variables set
 	elif [[ "$arg" =~ ^--([[:alnum:]]+)=(.+)$ ]]; then
 		USERVARIABLES+=( "${BASH_REMATCH[1]}"="\"${BASH_REMATCH[2]}\"" )
-	elif [[ "$arg" =~ ^[[:alnum:]]+$ ]]; then
+	elif [[ "$arg" =~ ^[[:graph:]]+$ ]]; then
 		USERTARGETS+=( "${BASH_REMATCH[0]}" )
 	fi
 done
@@ -284,7 +284,7 @@ IFS="
 for line in $file
 do
 	# Targets parsing
-	if [[ "$line" =~ ^($extensionslist)[[:blank:]]+([[:alnum:]]+):([[[:alnum:]]\ ]*)$ ]]; then
+	if [[ "$line" =~ ^($extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)$ ]]; then
 		# Search for duplicate
 		find_extension ${BASH_REMATCH[2]}
 		if [[ $? -eq 0 ]]; then

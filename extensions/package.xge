@@ -70,9 +70,9 @@ action
 "
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\ {4}([[:alpha:]]+):[[:blank:]]*$ ]]; then
+		if [[ "$line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
 			cur_distr=${BASH_REMATCH[1]}
-		elif [[ "$line" =~ ^\ {8}([[:alpha:]]+):[[:blank:]]*([[:alpha:]][[:print:]]*)$ ]]; then
+		elif [[ "$line" =~ ^(\ {8}|\	{2})([[:alpha:]]+):[[:blank:]]*([[:graph:]]*)[[:blank:]]*$ ]]; then
 			if [[ -z "$cur_distr" ]]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
 			fi
@@ -109,13 +109,13 @@ check
 "
 	for line in ${TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^\ {4}([[:alpha:]]+):[[:blank:]]*$ ]]; then
-			cur_distr=${BASH_REMATCH[1]}
-		elif [[ "$line" =~ ^\ {8}([[:alpha:]]+):[[:blank:]]*([[:alpha:]][[[:alnum:]]\.\+\-]*)$ ]]; then
+		if [[ "$line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
+			cur_distr=${BASH_REMATCH[2]}
+		elif [[ "$line" =~ ^(\ {8}|\	{2})([[:alpha:]]+):[[:blank:]]*([[:graph:]]*)[[:blank:]]*$ ]]; then
 			if [[ -z "$cur_distr" ]]; then
 				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
 			fi
-			PACKAGES["$cur_distr"_${BASH_REMATCH[1]}]=${BASH_REMATCH[2]}
+			PACKAGES["$cur_distr"_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
 		else
 			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END
 			exit
@@ -136,6 +136,10 @@ check
 		checkInstall "${PACKAGES[all_name]}"
 		if [[ $? -eq 0 ]]; then
 			return 0
+		fi
+        checkPackageExist "${PACKAGES[all_name]}"
+		if [[ $? -eq 0 ]]; then
+			return 1;
 		fi
 	else
 		echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END
