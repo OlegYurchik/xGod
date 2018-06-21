@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Identify distribution
+function getDistributionName()
+{
+	out=$(lsb_release -i | sed "s/Distributor\ ID:\	//g")
+	return 0
+}
+
 # Function for add target
 function addtarget()
 {
@@ -112,6 +119,7 @@ declare -a DO
 declare -a ALREADYCHECKED
 declare -a EXTENSIONSFILES
 declare -a TARGETSCHECK
+declare -a TARGETSUSER
 declare -a USERTARGETS
 # Declare arrays with user info
 declare -a USERVARIABLES
@@ -124,7 +132,12 @@ cur_action=0
 cur_command=0
 EXTENSIONSFILES=( "./extensions/package.xge" "./extensions/pip3.xge" ) # Standart extensions
 
-
+# Identify distribution of Linux
+getDistributionName
+DISTRIBUTION=${out,,}
+if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" || $DISTRIBUTION=="linuxmint" ]]; then
+	USERCHANGE="su %%%"
+fi
 
 # Main program
 # Parsing arguments
@@ -277,6 +290,7 @@ cur_command=0
 cur_extension=""
 cur_target=""
 func=""
+cur_user=$USER
 extensionslist=$(echo "${EXTENSIONS[@]} target" | sed "s/ /|/g")
 file=$(cat "$1" | sed -e "/^$/d" -e "/^[[:blank:]]*$/d" -e "/^[[:blank:]]*#.*$/d")
 IFS="
@@ -284,7 +298,9 @@ IFS="
 for line in $file
 do
 	# Targets parsing
-	if [[ "$line" =~ ^($extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)$ ]]; then
+	if [[ "$line" =~ ^@([[:graph:]]+)[[:blank:]]*$ ]]; then
+		cur_user=${BASH_REMATCH[1]}
+	elif [[ "$line" =~ ^($extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)$ ]]; then
 		# Search for duplicate
 		find_extension ${BASH_REMATCH[2]}
 		if [[ $? -eq 0 ]]; then
@@ -297,18 +313,22 @@ do
 				func="#"
 			fi
 			TARGETS[$cur_target]="$func"
+			TARGETSUSER[$cur_targer]="$cur_user"
+			cur_user=$USER
 			func=""
 			cur_target=""
 		fi
 		TARGETDEPENDS[${BASH_REMATCH[1]}_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
 		cur_target=${BASH_REMATCH[1]}_${BASH_REMATCH[2]}
 	# Targets check functions parsing
-	elif [[ "$line" =~ ^check[[:blank:]]+([[:alpha:]]+)\(\)[[:blank:]]*$ ]]; then
+	elif [[ "$line" =~ ^check[[:blank:]]+([[:graph:]]+)\(\)[[:blank:]]*$ ]]; then
 		if [[ -n "$cur_target" ]]; then
 			if [[ -z "$func" ]]; then
 				func="#"
 			fi
 			TARGETS[$cur_target]="$func"
+			TARGETSUSER[$cur_targer]="$cur_user"
+			cur_user=$USER
 			func=""
 			cur_target=""
 		fi
@@ -336,6 +356,8 @@ if [[ -n "$cur_target" ]]; then
 		func="#"
 	fi
 	TARGETS[$cur_target]="$func"
+	TARGETSUSER[$cur_targer]="$cur_user"
+	cur_user=$USER
 	func=""
 	cur_target=""
 fi
@@ -371,6 +393,8 @@ do
 	fi
 	echo -e $C_WAIT$C_BOLD"Выполняется цель '$target'"$C_END
 	if [[ -n ${TARGETS[$t]} ]]; then
+		eval "$(echo "$USERCHANGE" | sed "s/%%%/${TARGETSUSER[$t]}/g")"
 		"$extension"_action $t
+		eval "$(echo "$USERCHANGE" | sed "s/%%%/$cur_user/g")"
 	fi
 done
