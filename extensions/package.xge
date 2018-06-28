@@ -1,101 +1,94 @@
 name package
 
-# Identify distribution
-function getDistributionName()
-{
-	out=$(lsb_release -i | sed "s/Distributor\ ID:\	//g")
-	return 0
-}
-
 # Check exist package in repository
-function checkPackageExist()
+function XG_checkPackageExist()
 {
 	if [ -z "$1" ]; then
 		return 1
 	fi
-	if [[ "$($(echo $PACKAGESEARCH | sed "s/%%%/$1/g"))" =~ "$(echo $PACKAGESEARCHEXP | sed "s/%%%/$1/g")" ]]; then
-		echo -e $C_OK$C_GREEN$C_BOLD"'$1' присутствует в репозитории"$C_END
+	if [[ "$($(echo $XG_PACKAGESEARCH | sed "s/%%%/$1/g"))" =~ "$(echo $XG_PACKAGESEARCHEXP | sed "s/%%%/$1/g")" ]]; then
+		echo -e $XG_C_OK$XG_C_GREEN$XG_C_BOLD"'$1' присутствует в репозитории"$XG_C_END
 		return 0
 	fi
-	echo -e $C_OK$C_RED"'$1' не присутствует в репозитории"$C_END
+	echo -e $XG_C_OK$XG_C_RED"'$1' не присутствует в репозитории"$XG_C_END
 	return 1
 }
 
-function checkRepo()
+function XG_checkRepo()
 {
 	if [ -z "$1" ]; then
 		return 1;
 	fi
 	founded=$(grep -r "$1" /etc/apt);
-	echo "$founded"
+	echo "$XG_founded"
 }
 
 
-function checkInstall()
+function XG_checkInstall()
 {
-	if [[ $($(echo "$PACKAGEISINSTALL" | sed "s/%%%/$1/g")) =~ $(echo "$PACKAGEISINSTALLEXP" | sed "s/%%%/$1/g") ]]; then
-		echo -e $C_OK$C_GREEN$C_BOLD"'$1' установлен"$C_END
+	if [[ $($(echo "$XG_PACKAGEISINSTALL" | sed "s/%%%/$1/g")) =~ $(echo "$XG_PACKAGEISINSTALLEXP" | sed "s/%%%/$1/g") ]]; then
+		echo -e $XG_C_OK$XG_C_GREEN$XG_C_BOLD"'$1' установлен"$XG_C_END
 		return 0
 	fi
-	echo -e $C_OK$C_RED$C_BOLD"'$1' не установлен"$C_END
+	echo -e $XG_C_OK$XG_C_RED$XG_C_BOLD"'$1' не установлен"$XG_C_END
 	return 1
 }
 
-function changeUser()
+function XG_changeUser()
 {
-	if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" || $DISTRIBUTION=="linuxmint" ]]; then
-		command="sudo -u $1"
+	if [[ $XG_DISTRIBUTION=="ubuntu" || $XG_DISTRIBUTION=="debian" || $XG_DISTRIBUTION=="linuxmint" ]]; then
+		XG_command="sudo -u $1"
 	fi
-	echo $command
+	echo $XG_command
 }
 
 # Identify distribution of Linux
-getDistributionName
-DISTRIBUTION=${out,,}
-if [[ $DISTRIBUTION=="ubuntu" || $DISTRIBUTION=="debian" || $DISTRIBUTION=="linuxmint" ]]; then
-	PACKAGESEARCH="apt-cache show %%%"
-	PACKAGESEARCHEXP="Package: %%%"
-	PACKAGEISINSTALL="dpkg -s %%%"
-	PACKAGEISINSTALLEXP="Package: %%%"
-	PACKAGEINSTALL="apt-get install %%%"
+XG_getDistributionName
+XG_DISTRIBUTION=${XG_out,,}
+if [[ $XG_DISTRIBUTION=="ubuntu" || $XG_DISTRIBUTION=="debian" || $XG_DISTRIBUTION=="linuxmint" ]]; then
+	XG_PACKAGESEARCH="apt-cache show %%%"
+	XG_PACKAGESEARCHEXP="Package: %%%"
+	XG_PACKAGEISINSTALL="dpkg -s %%%"
+	XG_PACKAGEISINSTALLEXP="Package: %%%"
+	XG_PACKAGEINSTALL="apt-get install %%%"
 fi
 
 action
 	if [ -z "$1" ]; then
 		return 1
 	fi
-	cur_distr=""
-	declare -A PACKAGES
+	XG_cur_distr=""
+	declare -A XG_PACKAGES
 	IFS="
 "
-	for line in ${TARGETS[$1]}
+	for XG_line in ${XG_TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
-			cur_distr=${BASH_REMATCH[1]}
-		elif [[ "$line" =~ ^(\ {8}|\	{2})([[:alpha:]]+):[[:blank:]]*([[:graph:]]*)[[:blank:]]*$ ]]; then
-			if [[ -z "$cur_distr" ]]; then
-				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
+		if [[ "$XG_line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
+			XG_cur_distr=${BASH_REMATCH[2]}
+		elif [[ "$XG_line" =~ ^(\ {8}|\	{2})([[:alpha:]]+):[[:blank:]]*([[:graph:]]*)[[:blank:]]*$ ]]; then
+			if [[ -z "$XG_cur_distr" ]]; then
+				echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Неправильно указан пакет '$1'"$XG_C_END
 			fi
-			PACKAGES["$cur_distr"_${BASH_REMATCH[1]}]=${BASH_REMATCH[2]}
+			XG_PACKAGES["$XG_cur_distr"_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
 		else
-			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END
+			echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Неверная инструкция '$XG_line' в пакете '$1'"$XG_C_END
 			exit
 		fi
 	done
 	IFS=" "
-	if [[ -n "${PACKAGES[$DISTRIBUTION"_"name]}" ]]; then
-		echo -e $C_OK$C_BOLD"Установка пакета '${PACKAGES[$DISTRIBUTION""_name]}' ..."$C_END
-		eval "$(echo $PACKAGEINSTALL | sed "s/%%%/${PACKAGES[$DISTRIBUTION"_"name]}/g")"
-		echo -e $C_OK$C_BOLD$C_GREEN"Пакет '${PACKAGES[$DISTRIBUTION"_"name]}' установлен"$C_END
+	if [[ -n "${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}" ]]; then
+		echo -e $XG_C_OK$XG_C_BOLD"Установка пакета '${XG_PACKAGES[$XG_DISTRIBUTION""_name]}' ..."$XG_C_END
+		eval "$(echo $XG_PACKAGEINSTALL | sed "s/%%%/${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}/g")"
+		echo -e $XG_C_OK$XG_C_BOLD$XG_C_GREEN"Пакет '${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}' установлен"$XG_C_END
 		return 0
 	# If this package exist without distribution name
-	elif [[ -n "${PACKAGES[all_name]}" ]]; then 
-		echo -e $C_OK$C_BOLD"Установка пакета '${PACKAGES[all_name]}' ..."$C_END
-		eval "$(echo $PACKAGEINSTALL | sed "s/%%%/${PACKAGES[all_name]}/g")"
-		echo -e $C_OK$C_BOLD$C_GREEN"Пакет '${PACKAGES[all_name]}' установлен"$C_END
+	elif [[ -n "${XG_PACKAGES[all_name]}" ]]; then 
+		echo -e $XG_C_OK$XG_C_BOLD"Установка пакета '${XG_PACKAGES[all_name]}' ..."$XG_C_END
+		eval "$(echo $XG_PACKAGEINSTALL | sed "s/%%%/${XG_PACKAGES[all_name]}/g")"
+		echo -e $XG_C_OK$XG_C_BOLD$XG_C_GREEN"Пакет '${XG_PACKAGES[all_name]}' установлен"$XG_C_END
 		return 0
 	else
-		echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END
+		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Неверная инструкция '$XG_line' в пакете '$1'"$XG_C_END
 		exit
 	fi
 endaction
@@ -103,46 +96,46 @@ check
 	if [ -z "$1" ]; then
 		return 1
 	fi
-	cur_distr=""
-	declare -A PACKAGES
+	XG_cur_distr=""
+	declare -A XG_PACKAGES
 	IFS="
 "
-	for line in ${TARGETS[$1]}
+	for XG_line in ${XG_TARGETS[$1]}
 	do
-		if [[ "$line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
-			cur_distr=${BASH_REMATCH[2]}
-		elif [[ "$line" =~ ^(\ {8}|\	{2})([[:alpha:]]+):[[:blank:]]*([[:graph:]]*)[[:blank:]]*$ ]]; then
-			if [[ -z "$cur_distr" ]]; then
-				echo -e $C_ERROR$C_RED$C_BOLD"Неправильно указан пакет '$1'"$C_END
+		if [[ "$XG_line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
+			XG_cur_distr=${BASH_REMATCH[2]}
+		elif [[ "$XG_line" =~ ^(\ {8}|\	{2})([[:alpha:]]+):[[:blank:]]*([[:graph:]]*)[[:blank:]]*$ ]]; then
+			if [[ -z "$XG_cur_distr" ]]; then
+				echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Неправильно указан пакет '$1'"$XG_C_END
 			fi
-			PACKAGES["$cur_distr"_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
+			XG_PACKAGES["$XG_cur_distr"_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
 		else
-			echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END
+			echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Неверная инструкция '$XG_line' в пакете '$1'"$XG_C_END
 			exit
 		fi
 	done
 	IFS=" "
-	if [[ -n "${PACKAGES[$DISTRIBUTION"_"name]}" ]]; then
-		checkInstall "${PACKAGES[$DISTRIBUTION"_"name]}"
+	if [[ -n "${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}" ]]; then
+		XG_checkInstall "${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}"
 		if [[ $? -eq 0 ]]; then
 			return 0
 		fi
-		checkPackageExist "${PACKAGES[$DISTRIBUTION"_"name]}"
+		XG_checkPackageExist "${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}"
 		if [[ $? -eq 0 ]]; then
 			return 1;
 		fi
 	# If this package exist without distribution name
-	elif [[ -n "${PACKAGES[all_name]}" ]]; then 
-		checkInstall "${PACKAGES[all_name]}"
+	elif [[ -n "${XG_PACKAGES[all_name]}" ]]; then 
+		XG_checkInstall "${XG_PACKAGES[all_name]}"
 		if [[ $? -eq 0 ]]; then
 			return 0
 		fi
-        checkPackageExist "${PACKAGES[all_name]}"
+        XG_checkPackageExist "${XG_PACKAGES[all_name]}"
 		if [[ $? -eq 0 ]]; then
 			return 1;
 		fi
 	else
-		echo -e $C_ERROR$C_RED$C_BOLD"Неверная инструкция '$line' в пакете '$1'"$C_END
+		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Неверная инструкция '$XG_line' в пакете '$1'"$XG_C_END
 		exit
 	fi
 	return 1
