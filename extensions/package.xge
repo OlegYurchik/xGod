@@ -6,7 +6,7 @@ function XG_checkPackageExist()
 	if [ -z "$1" ]; then
 		return 1
 	fi
-	if [[ "$($(echo $XG_DISTRIBUTION[packagesearch] | sed "s/%%%/$1/g"))" =~ "$(echo $XG_DISTRIBUTION[packagesearchexp] | sed "s/%%%/$1/g")" ]]; then
+	if [[ "$($(echo ${XG_DISTRIBUTION[packagesearch]} | sed "s/%%%/$1/g"))" =~ "$(echo ${XG_DISTRIBUTION[packagesearchexp]} | sed "s/%%%/$1/g")" ]]; then
 		echo -e $XG_C_OK$XG_C_GREEN$XG_C_BOLD"'$1' присутствует в репозитории"$XG_C_END
 		return 0
 	fi
@@ -26,7 +26,7 @@ function XG_checkRepo()
 
 function XG_checkInstall()
 {
-	if [[ $($(echo "$XG_DISTRIBUTION[packageisinstall]" | sed "s/%%%/$1/g")) =~ $(echo "$XG_DISTRIBUTION[packageisinstallexp]" | sed "s/%%%/$1/g") ]]; then
+	if [[ $($(echo "${XG_DISTRIBUTION[packageisinstall]}" | sed "s/%%%/$1/g")) =~ $(echo "${XG_DISTRIBUTION[packageisinstallexp]}" | sed "s/%%%/$1/g") ]]; then
 		echo -e $XG_C_OK$XG_C_GREEN$XG_C_BOLD"'$1' установлен"$XG_C_END
 		return 0
 	fi
@@ -35,7 +35,7 @@ function XG_checkInstall()
 }
 
 # Identify distribution of Linux
-case $XG_DISTRIBUTION[name] in
+case ${XG_DISTRIBUTION[name]} in
     ubuntu|debian|linuxmint)
 	    XG_DISTRIBUTION[packagesearch]="apt-cache show %%%"
 	    XG_DISTRIBUTION[packagesearchexp]="Package: %%%"
@@ -70,13 +70,13 @@ action
 	IFS=" "
 	if [[ -n "${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}" ]]; then
 		echo -e $XG_C_OK$XG_C_BOLD"Установка пакета '${XG_PACKAGES[$XG_DISTRIBUTION""_name]}' ..."$XG_C_END
-		eval "$(echo $XG_DISTRIBUTION[packageinstall] | sed "s/%%%/${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}/g")"
-		echo -e $XG_C_OK$XG_C_BOLD$XG_C_GREEN"Пакет '${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}' установлен"$XG_C_END
+		eval "$(echo ${XG_DISTRIBUTION[packageinstall]} | sed "s/%%%/${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}/g")"
+		echo -e $XG_C_OK$XG_C_BOLD$XG_C_GREEN"Пакет '${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}' установлен"$XG_C_END
 		return 0
 	# If this package exist without distribution name
 	elif [[ -n "${XG_PACKAGES[all_name]}" ]]; then 
 		echo -e $XG_C_OK$XG_C_BOLD"Установка пакета '${XG_PACKAGES[all_name]}' ..."$XG_C_END
-		eval "$(echo $XG_DISTRIBUTION[packageinstall] | sed "s/%%%/${XG_PACKAGES[all_name]}/g")"
+		eval "$(echo ${XG_DISTRIBUTION[packageinstall]} | sed "s/%%%/${XG_PACKAGES[all_name]}/g")"
 		echo -e $XG_C_OK$XG_C_BOLD$XG_C_GREEN"Пакет '${XG_PACKAGES[all_name]}' установлен"$XG_C_END
 		return 0
 	else
@@ -107,12 +107,12 @@ check
 		fi
 	done
 	IFS=" "
-	if [[ -n "${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}" ]]; then
-		XG_checkInstall "${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}"
+	if [[ -n "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}" ]]; then
+		XG_checkInstall "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}"
 		if [[ $? -eq 0 ]]; then
 			return 0
 		fi
-		XG_checkPackageExist "${XG_PACKAGES[$XG_DISTRIBUTION"_"name]}"
+		XG_checkPackageExist "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}"
 		if [[ $? -eq 0 ]]; then
 			return 1;
 		fi

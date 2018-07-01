@@ -23,7 +23,7 @@ function XG_addtarget()
 
     # Check if target doesn't exist
 	if [[ -z "${XG_TARGETS[$1]}" ]]; then
-		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Нет цели '$XG_target'"#C_END
+		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Нет цели '$XG_target'"$XG_C_END
 		exit
 	fi
 
@@ -38,7 +38,7 @@ function XG_addtarget()
 
 	# Search check function
 	XG_res=0
-	for XG_t in "${XG_TARGETSCHECK[@]}"
+    for XG_t in "${XG_TARGETSCHECK[@]}"
 	do
 		if [[ "$XG_target" == "$XG_t" ]]; then
 			XG_res=1
@@ -50,10 +50,10 @@ function XG_addtarget()
 	if [[ $XG_res -eq 1 ]]; then
 		eval "XG_check_$XG_target"
 		if [[ $? -eq 1 ]]; then
-			for XG_t in ${XG_TARGETDEPENDS[$1]};
+			for XG_t in ${XG_TARGETSDEPENDS[$1]};
 			do
-				XG_find_extension $XG_t
-				XG_addtarget "$XG_out"_"$XG_t"
+				XG_find_extension $XG_t				
+                XG_addtarget "$XG_out"_"$XG_t"
 			done
 		else
 			return 0
@@ -62,7 +62,7 @@ function XG_addtarget()
 	else
 		"XG_$XG_extension"_check "$1"
 		if [[ $? -eq 1 ]]; then
-			for XG_t in ${XG_TARGETDEPENDS[$1]};
+			for XG_t in ${XG_TARGETSDEPENDS[$1]};
 			do
 				XG_find_extension $XG_t
 				XG_addtarget "$XG_out"_"$XG_t"
@@ -388,8 +388,11 @@ IFS="
 "
 for XG_line in $XG_file
 do
+    # Skip empty lines and comments
+    if [[ "$XG_line" =~ ^[[:blank:]]*$ || "$XG_line" =~ ^[[:blank:]]*# ]]; then
+        continue
 	# Targets parsing
-	if [[ "$XG_line" =~ ^($XG_extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)$ ]]; then
+	elif [[ "$XG_line" =~ ^($XG_extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)$ ]]; then
 		
         # Search for duplicate
 		XG_find_extension ${BASH_REMATCH[2]}
@@ -409,7 +412,7 @@ do
         
         XG_func=""
         XG_func_status="target"
-		XG_TARGETDEPENDS[${BASH_REMATCH[1]}_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
+		XG_TARGETSDEPENDS[${BASH_REMATCH[1]}_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
 		XG_cur_target=${BASH_REMATCH[1]}_${BASH_REMATCH[2]}
 	
     # Targets check functions parsing
