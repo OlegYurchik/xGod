@@ -94,6 +94,7 @@ function XG_check_line()
         check|action)
             case "$XG_func_status" in
                 none|target)
+                    XG_func+="#"
                     return 0
                 ;;
                 check)
@@ -141,6 +142,7 @@ function XG_check_line()
         target)
             case "$XG_func_status" in
                 none|target)
+                    XG_func+="#"
                     return 0                
                 ;;
                 check)
@@ -167,7 +169,8 @@ function XG_find_extension()
 	fi
 	for XG_e in ${XG_EXTENSIONS[@]} target
 	do
-		if [[ -n "${XG_TARGETS[""$XG_e""_$1]}" ]]; then
+        XG_tmp="$XG_e"_"$1"
+		if [[ -n "${XG_TARGETS[$XG_tmp]}" ]]; then
 			XG_out="$XG_e"
 			return 0
 		fi
@@ -219,10 +222,8 @@ declare -a XG_TARGETSCHECK
 declare -a XG_USERTARGETS
 
 # Define script directory
-XG_DIRECTORY="$(realpath "$(dirname "$0")")"
-
-# Get path of extensionfiles 
-XG_EXTENSIONSFILES=( $(ls $XG_DIRECTORY/extensions | xargs -n 1 -i echo "$XG_DIRECTORY/extensions/{}") ) # Standart extensions
+XG_DIRECTORY=$(realpath "$(dirname "$0")")
+XG_EXTENSIONSFILES=$(ls "$XG_DIRECTORY/extensions" | xargs -n 1 -i echo "$XG_DIRECTORY/extensions/{}")
 
 # Identify distribution of Linux
 XG_getDistributionName
@@ -233,8 +234,6 @@ case "${XG_DISTRIBUTION[name]}" in
         XG_DISTRIBUTION[userchange]="sudo -u"
     ;;
 esac
-
-
 
 # Parsing arguments
 for XG_arg in ${@:2}
@@ -251,6 +250,8 @@ done
 
 
 # Check extensions files
+IFS="
+"
 for XG_ef in ${XG_EXTENSIONSFILES[@]}
 do
 	if [ ! -r "$XG_ef" ]; then
@@ -258,16 +259,17 @@ do
 		exit
 	fi
 done
+IFS=" "
 
 # Parsing extensions files
+IFS="
+"
 for XG_ef in ${XG_EXTENSIONSFILES[@]}
 do
     XG_cur_extension=""
     XG_func=""
     XG_func_status="none"
     XG_string_number=1
-	IFS="
-"
 	for XG_line in $(cat $XG_ef)
 	do
 		# Extension name parsing
@@ -352,8 +354,8 @@ do
 		fi
 		XG_string_number=$(expr $XG_string_number + 1)
 	done
-	IFS=" "
 done
+IFS=" "
 # Check if previous string is a bash function
 XG_check_line "$XG_ef" "$XG_func_status"
 eval "$XG_func"

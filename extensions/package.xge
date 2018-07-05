@@ -37,11 +37,11 @@ function XG_checkInstall()
 # Identify distribution of Linux
 case ${XG_DISTRIBUTION[name]} in
     ubuntu|debian|linuxmint)
-	    XG_DISTRIBUTION[packagesearch]="apt-cache show %%%"
+	    XG_DISTRIBUTION[packagesearch]="${XG_DISTRIBUTION[root]} apt-cache show %%%"
 	    XG_DISTRIBUTION[packagesearchexp]="Package: %%%"
-	    XG_DISTRIBUTION[packageisinstall]="dpkg -s %%%"
+	    XG_DISTRIBUTION[packageisinstall]="${XG_DISTRIBUTION[root]} dpkg -s %%%"
 	    XG_DISTRIBUTION[packageisinstallexp]="Package: %%%"
-	    XG_DISTRIBUTION[packageinstall]="apt-get install %%%"
+	    XG_DISTRIBUTION[packageinstall]="${XG_DISTRIBUTION[root]} apt-get install %%%"
     ;;
 esac
 
@@ -55,7 +55,9 @@ action
 "
 	for XG_line in ${XG_TARGETS[$1]}
 	do
-		if [[ "$XG_line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
+        if [[ "$XG_line" =~ ^[[:blank:]]*# || "$XG_line" =~ ^[[:blank:]]*$ ]]; then
+            continue
+		elif [[ "$XG_line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
 			XG_cur_distr=${BASH_REMATCH[2]}
 		elif [[ "$XG_line" =~ ^(\ {8}|\	{2})([[:alpha:]]+):[[:blank:]]*([[:graph:]]*)[[:blank:]]*$ ]]; then
 			if [[ -z "$XG_cur_distr" ]]; then
@@ -94,7 +96,9 @@ check
 "
 	for XG_line in ${XG_TARGETS[$1]}
 	do
-		if [[ "$XG_line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
+		if [[ "$XG_line" =~ ^[[:blank:]]*# || "$XG_line" =~ ^[[:blank:]]*$ ]]; then
+            continue
+		elif [[ "$XG_line" =~ ^(\ {4}|\	)([[:alpha:]]+):[[:blank:]]*$ ]]; then
 			XG_cur_distr=${BASH_REMATCH[2]}
 		elif [[ "$XG_line" =~ ^(\ {8}|\	{2})([[:alpha:]]+):[[:blank:]]*([[:graph:]]*)[[:blank:]]*$ ]]; then
 			if [[ -z "$XG_cur_distr" ]]; then

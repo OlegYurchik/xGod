@@ -11,7 +11,9 @@ check
     XG_venvdir=""
 	for XG_line in ${XG_TARGETS[$1]}
 	do
-		if [[ "$XG_line" =~ ^\ {4}name:[[:blank:]]*([[:alpha:]][[[:alnum:]]\-\.]+)$ ]]; then
+		if [[ "$XG_line" =~ ^[[:blank:]]*# || "$XG_line" =~ ^[[:blank:]]*$ ]]; then
+            continue
+		elif [[ "$XG_line" =~ ^\ {4}name:[[:blank:]]*([[:alpha:]][[[:alnum:]]\-\.]+)$ ]]; then
 			XG_name=${BASH_REMATCH[1]}
         elif [[ "$XG_line" =~ ^\ {4}venvname:[[:blank:]]*([^[[:blank:]]]*)$ ]]; then
             XG_venvname=${BASH_REMATCH[1]}
@@ -52,7 +54,9 @@ action
     XG_venvdir=""
 	for XG_line in ${XG_TARGETS[$1]}
 	do
-		if [[ "$XG_line" =~ ^\ {4}name:[[:blank:]]*([[:alpha:]][[[:alnum:]]\.\+\-]+)$ ]]; then
+		if [[ "$XG_line" =~ ^[[:blank:]]*# || "$XG_line" =~ ^[[:blank:]]*$ ]]; then
+            continue
+		elif [[ "$XG_line" =~ ^\ {4}name:[[:blank:]]*([[:alpha:]][[[:alnum:]]\.\+\-]+)$ ]]; then
 			XG_name=${BASH_REMATCH[1]}
 		elif [[ "$XG_line" =~ ^\ {4}version:[[:blank:]]*(==)?([[[:digit:]]\.]+)$ ]]; then
 			XG_equal=${BASH_REMATCH[1]}
