@@ -24,44 +24,43 @@ function check_test()
     fi
     TESTS_ALL=$(($TESTS_ALL + 1))
     out="$("$XGOD" "$1" "$2")"
-    case "$3" in
-        equal)
-            if [[ "$out" == "$4" ]]; then
-                echo -e "\033[32mTest with "$1 $2" is checked\033[0m"
-                TESTS_OK=$(($TESTS_OK + 1))
-            else
-                echo -e "\033[31mTest with "$1 $2" is not checked\033[0m"
-                echo "$out"
-            fi
-        ;;
-        notequal)
-            if [[ "$out" != "$4" ]]; then
-                echo -e "\033[32mTest with "$1 $2" is checked\033[0m"
-                TESTS_OK=$(($TESTS_OK + 1))
-            else
-                echo -e "\033[31mTest with "$1 $2" is not checked\033[0m"
-                echo "$out"
-            fi
-        ;;
-        subset)
-            if [[ -n "$(echo "$out" | grep "$4")" ]]; then
-                echo -e "\033[32mTest with "$1 $2" is checked\033[0m"
-                TESTS_OK=$(($TESTS_OK + 1))
-            else
-                echo -e "\033[31mTest with "$1 $2" is not checked\033[0m"
-                echo "$out"
-            fi
-        ;;
-        notsubset)
-            if [[ -z "$(echo "$out" | grep "$4")" ]]; then
-                echo -e "\033[32mTest with "$1 $2" is checked\033[0m"
-                TESTS_OK=$(($TESTS_OK + 1))
-            else
-                echo -e "\033[31mTest with "$1 $2" is not checked\033[0m"
-                echo "$out"
-            fi
-        ;;
-    esac
+    res="true"
+    for (( i = 3; i < $#; i++ ))
+    do
+        case "${!i}" in
+            equal)
+                let "i=$i+1"
+                if [[ "$out" != "${!i}" ]]; then
+                    res="false"
+                fi
+            ;;
+            notequal)
+                let "i=$i+1"
+                if [[ "$out" == "${!i}" ]]; then
+                    res="false"
+                fi
+            ;;
+            subset)
+                let "i=$i+1"
+                if [[ -z "$(echo "$out" | grep "${!i}")" ]]; then
+                    res="false"
+                fi
+            ;;
+            notsubset)
+                let "i=$i+1"
+                if [[ -n "$(echo "$out" | grep "${!i}")" ]]; then
+                    res="false"
+                fi
+            ;;
+        esac
+    done
+    if [[ "$res" == "true" ]]; then
+        echo -e "\033[32mTest with \033[1m\""$1 $2"\"\033[0m\033[32m is checked\033[0m"
+        TESTS_OK=$(($TESTS_OK + 1))
+    else
+        echo -e "\033[31mTest with \033[1m\""$1 $2"\"\033[0m\033[31m is not checked\033[0m"
+        echo "$out"
+    fi
 }
 
 
@@ -74,38 +73,33 @@ function target_simple()
 
 function target_manytargets()
 {
-    check_test targetok.xg "simple1 simple2" subset "SIMPLE1-OK
-SIMPLE2-OK"
+    check_test targetok.xg "simple1 simple2" subset "SIMPLE1-OK" \
+        subset "SIMPLE2-OK"
 }
 
 function target_dependone()
 {
-    check_test targetok.xg "dependone" subset "SIMPLE1-OK
-    DEPENDONE-OK"
+    check_test targetok.xg "dependone" subset "SIMPLE1-OK" subset \
+        "DEPENDONE-OK"
 }
 
 function target_dependtwo()
 {
-    check_test targetok.xg "dependtwo" subset "SIMPLE1-OK
-    SIMPLE2-OK
-    DEPENDTWO-OK"
+    check_test targetok.xg "dependtwo" subset "SIMPLE1-OK" subset \
+        "SIMPLE2-OK" subset "DEPENDTWO-OK"
 }
 
 function target_dependdeep()
 {
-    check_test targetok.xg "dependdeep" subset "SIMPLE1-OK
-    SIMPLE2-OK
-    DEPENDTWO-OK
-    DEPENDDEEP-OK"
+    check_test targetok.xg "dependdeep" subset "SIMPLE1-OK" subset \
+        "SIMPLE2-OK" subset "DEPENDTWO-OK" subset "DEPENDDEEP-OK"
 }
 
 function target_dependmore()
 {
-    check_test targetok.xg "dependmore" subset "SIMPLE1-OK
-    SIMPLE2-OK
-    DEPENDTWO-OK
-    DEPENDDEEP-OK
-    DEPENDMORE-OK"
+    check_test targetok.xg "dependmore" subset "SIMPLE1-OK" subset \
+        "SIMPLE2-OK" subset "DEPENDTWO-OK" subset "DEPENDDEEP-OK" \
+        subset "DEPENDMORE-OK"
 }
 
 function target_nameunderscore()
@@ -136,7 +130,7 @@ function target_alwayschecked()
 
 function target_dependalwayschecked()
 {
-    check_test target.ok "dependalwayschecked" notsubset \
+    check_test targetok.xg "dependalwayschecked" notsubset \
     "ALWAYSCHECKED-FAILED" subset "DEPENDALWAYSCHECKED-OK" 
 }
 
