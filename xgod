@@ -418,7 +418,7 @@ do
 		XG_cur_target=${BASH_REMATCH[1]}_${BASH_REMATCH[2]}
 	
     # Targets check functions parsing
-	elif [[ "$XG_line" =~ ^check[[:blank:]]+([[:graph:]]+)\(\)[[:blank:]]*$ ]]; then
+	elif [[ "$XG_line" =~ ^check[[:blank:]]+([[:graph:]]+)[[:blank:]]*$ ]]; then
 		
         XG_check_line "$1" check
         # If previous strings are target        		
@@ -428,8 +428,9 @@ do
             eval "$XG_func"
 		fi
         
+        
         XG_func="function XG_check_${BASH_REMATCH[1]}(){"
-        XG_func_status="check"		
+        XG_func_status="check"
         XG_TARGETSCHECK+=( ${BASH_REMATCH[1]} )
 
 	elif [[ "$XG_line" == "endcheck" ]]; then

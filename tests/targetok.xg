@@ -22,17 +22,20 @@ target name_underscore:
 target namecipher1:
     echo "NAMECIPHER1-OK"
 
+target 1namecipher:
+    echo "1NAMECIPHER-OK"
+
 target alwaysunchecked:
     echo "ALWAYSUNCHECKED-OK"
 
-check alwaysunchecked()
+check alwaysunchecked
     return 1
 endcheck
 
 target alwayschecked:
     echo "ALWAYSCHECKED-FAILED"
 
-check alwaychecked()
+check alwayschecked
     return 0
 endcheck
 

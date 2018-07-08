@@ -118,9 +118,9 @@ function target_namecipher1()
     check_test targetok.xg "namecipher1" subset "NAMECIPHER1-OK"
 }
 
-function target_withcomment()
+function target_1namecipher()
 {
-    check_test targetok.xg "withcomment" subset "WITHCOMMENT-OK"
+    check_test targetok.xg "1namecipher" subset "1NAMECIPHER-OK"
 }
 
 function target_alwaysunchecked()
@@ -145,9 +145,14 @@ function target_withargument()
     check_test targetok.xg "withargument --arg=MF" subset "arg=MF" 
 }
 
+function target_withcomment()
+{
+    check_test targetok.xg "withcomment" subset "WITHCOMMENT-OK"
+}
+
 target=( simple manytargets dependone dependtwo dependdeep dependmore \
-    nameunderscore namecipher1 alwaysunchecked alwayschecked \
-    dependalwayschecked withargument withcomment )
+    nameunderscore namecipher1 1namecipher alwaysunchecked \
+    alwayschecked dependalwayschecked withargument withcomment )
 tests=( target )
 
 if [[ -z "$1" ]]; then
