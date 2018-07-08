@@ -1,0 +1,48 @@
+target simple1:
+    echo "SIMPLE1-OK"
+
+target simple2:
+    echo "SIMPLE2-OK"
+
+target dependone: simple1
+    echo "DEPENDONE-OK"
+
+target dependtwo: simple1 simple2
+    echo "DEPENDTWO-OK"
+
+target dependdeep: dependtwo
+    echo "DEPENDDEEP-OK"
+
+target dependmore: dependdeep
+    echo "DEPENDMORE-OK"
+
+target name_underscore:
+    echo "NAME_UNDERSCORE-OK"
+
+target namecipher1:
+    echo "NAMECIPHER1-OK"
+
+target alwaysunchecked:
+    echo "ALWAYSUNCHECKED-OK"
+
+check alwaysunchecked()
+    return 1
+endcheck
+
+target alwayschecked:
+    echo "ALWAYSCHECKED-FAILED"
+
+check alwaychecked()
+    return 0
+endcheck
+
+target dependalwayschecked: alwayschecked
+    echo "DEPENDALWAYSCHECKED-OK"
+
+target withargument:
+    echo "arg=$arg"
+
+target withcomment:
+# Any comment1
+    # Any comment2
+    echo "WITHCOMMENT-OK"
