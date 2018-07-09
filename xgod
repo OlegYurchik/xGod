@@ -481,7 +481,7 @@ done
 for XG_t in ${XG_DO[@]}
 do	
 	# Check target argument
-	if [[ "$XG_t" =~ ([[:alnum:]]+)_([[[:alnum:]_]]+)$ ]]; then
+	if [[ "$XG_t" =~ ([[:alnum:]]+)_([[:graph:]]+)$ ]]; then
 		XG_extension=${BASH_REMATCH[1]}
 		XG_target=${BASH_REMATCH[2]}
 	fi
