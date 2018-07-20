@@ -13,7 +13,7 @@ check
 	do
 		if [[ "$XG_line" =~ ^[[:blank:]]*# || "$XG_line" =~ ^[[:blank:]]*$ ]]; then
             continue
-		elif [[ "$XG_line" =~ ^\ {4}name:[[:blank:]]*([[:alpha:]][[[:alnum:]]\-\.]+)$ ]]; then
+		elif [[ "$XG_line" =~ ^\ {4}name:[[:blank:]]*([[:graph:]]+)$ ]]; then
 			XG_name=${BASH_REMATCH[1]}
         elif [[ "$XG_line" =~ ^\ {4}venvname:[[:blank:]]*([^[[:blank:]]]*)$ ]]; then
             XG_venvname=${BASH_REMATCH[1]}
@@ -56,7 +56,7 @@ action
 	do
 		if [[ "$XG_line" =~ ^[[:blank:]]*# || "$XG_line" =~ ^[[:blank:]]*$ ]]; then
             continue
-		elif [[ "$XG_line" =~ ^\ {4}name:[[:blank:]]*([[:alpha:]][[[:alnum:]]\.\+\-]+)$ ]]; then
+		elif [[ "$XG_line" =~ ^\ {4}name:[[:blank:]]*([[:graph:]]+)$ ]]; then
 			XG_name=${BASH_REMATCH[1]}
 		elif [[ "$XG_line" =~ ^\ {4}version:[[:blank:]]*(==)?([[[:digit:]]\.]+)$ ]]; then
 			XG_equal=${BASH_REMATCH[1]}
@@ -79,7 +79,7 @@ action
 		fi
 		source "$XG_venvdir/$XG_venvname/bin/activate"
 	fi
-	pip3 install $XG_name$XG_equal$XG_version
+	${XG_DISTRIBUTION[root]} pip3 install $XG_name$XG_equal$XG_version
 	if [ -n "$XG_venvname" ]; then
 		deactivate	
 	fi
