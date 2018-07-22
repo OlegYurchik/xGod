@@ -1,5 +1,6 @@
 XGOD="$(realpath "$(dirname "$0")")/../xgod"
 CUR_DIR="$(realpath "$(dirname "$0")")"
+OUT=1
 
 TESTS_OK=0
 TESTS_ALL=0
@@ -24,6 +25,9 @@ function check_test()
     fi
     TESTS_ALL=$(($TESTS_ALL + 1))
     out="$("$XGOD" "$1" "$2")"
+    if [[ $OUT -eq 1 ]]; then
+        echo "$out"
+    fi
     res="true"
     for (( i = 3; i < $#; i++ ))
     do

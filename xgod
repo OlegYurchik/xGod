@@ -4,7 +4,7 @@
 # Identify distribution
 function XG_getDistributionName()
 {
-	XG_out=$(lsb_release -i | sed "s/Distributor\ ID:\	//g")
+    XG_out=$(lsb_release -i | sed "s/Distributor\ ID:\  //g")
     XG_out=${XG_out,,}
     return 0
 }
@@ -13,67 +13,67 @@ function XG_getDistributionName()
 # Function for add target
 function XG_addtarget()
 {
-	# Check target argument
-	if [[ "$1" =~ ^($XG_extensionslist)_([[:graph:]]+)$ ]]; then
-		XG_extension=${BASH_REMATCH[1]}
-		XG_target=${BASH_REMATCH[2]}
-	else
-		return 1
-	fi
+    # Check target argument
+    if [[ "$1" =~ ^($XG_extensionslist)_([[:graph:]]+)$ ]]; then
+        XG_extension=${BASH_REMATCH[1]}
+        XG_target=${BASH_REMATCH[2]}
+    else
+        return 1
+    fi
 
     # Check if target doesn't exist
-	if [[ -z "${XG_TARGETS[$1]}" ]]; then
-		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Нет цели '$XG_target'"$XG_C_END
-		exit
-	fi
+    if [[ -z "${XG_TARGETS[$1]}" ]]; then
+        echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Нет цели '$XG_target'"$XG_C_END
+        exit
+    fi
 
-	# Check if the target already checked
-	for XG_t in ${XG_ALREADYCHECKED[@]}
-	do
-		if [[ "$XG_t" == "$1" ]]; then
-			return 0
-		fi
-	done
-	XG_ALREADYCHECKED+=( "$1" )
+    # Check if the target already checked
+    for XG_t in ${XG_ALREADYCHECKED[@]}
+    do
+        if [[ "$XG_t" == "$1" ]]; then
+            return 0
+        fi
+    done
+    XG_ALREADYCHECKED+=( "$1" )
 
-	# Search check function
-	XG_res=0
+    # Search check function
+    XG_res=0
     for XG_t in "${XG_TARGETSCHECK[@]}"
-	do
-		if [[ "$XG_target" == "$XG_t" ]]; then
-			XG_res=1
-			break
-		fi
-	done
+    do
+        if [[ "$XG_target" == "$XG_t" ]]; then
+            XG_res=1
+            break
+        fi
+    done
 
-	# If target have check function
-	if [[ $XG_res -eq 1 ]]; then
-		eval "XG_check_$XG_target"
-		if [[ $? -eq 1 ]]; then
-			for XG_t in ${XG_TARGETSDEPENDS[$1]};
-			do
-				XG_find_extension $XG_t				
+    # If target have check function
+    if [[ $XG_res -eq 1 ]]; then
+        eval "XG_check_$XG_target"
+        if [[ $? -eq 1 ]]; then
+            for XG_t in ${XG_TARGETSDEPENDS[$1]};
+            do
+                XG_find_extension $XG_t             
                 XG_addtarget "$XG_out"_"$XG_t"
-			done
-		else
-			return 0
-		fi
-	# If this target exist
-	else
-		"XG_$XG_extension"_check "$1"
-		if [[ $? -eq 1 ]]; then
-			for XG_t in ${XG_TARGETSDEPENDS[$1]};
-			do
-				XG_find_extension $XG_t
-				XG_addtarget "$XG_out"_"$XG_t"
-			done
-		else
-			return 0
-		fi
-	# If error
-	fi
-	XG_DO+=( $1 )
-	return 0
+            done
+        else
+            return 0
+        fi
+    # If this target exist
+    else
+        "XG_$XG_extension"_check "$1"
+        if [[ $? -eq 1 ]]; then
+            for XG_t in ${XG_TARGETSDEPENDS[$1]};
+            do
+                XG_find_extension $XG_t
+                XG_addtarget "$XG_out"_"$XG_t"
+            done
+        else
+            return 0
+        fi
+    # If error
+    fi
+    XG_DO+=( $1 )
+    return 0
 }
 
 
@@ -99,11 +99,11 @@ function XG_check_line()
                 ;;
                 check)
                     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$1\":\nСтрока: $XG_string_number\nНезакрытая функция check"$XG_C_END
-		            exit
+                    exit
                 ;;
                 action)
                     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$1\":\nСтрока: $XG_string_number\nНезакрытая функция action"$XG_C_END
-			        exit
+                    exit
                 ;;
             esac
         ;;
@@ -111,7 +111,7 @@ function XG_check_line()
             case "$XG_func_status" in
                 none|target)
                     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$1\":\nСтрока: $XG_string_number\nНеоткрытая функция check"$XG_C_END
-		            exit
+                    exit
                 ;;
                 check)
                     XG_func+="}"
@@ -119,7 +119,7 @@ function XG_check_line()
                 ;;
                 action)
                     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$1\":\nСтрока: $XG_string_number\nНезакрытая функция action"$XG_C_END
-			        exit
+                    exit
                 ;;
             esac
         ;;
@@ -127,11 +127,11 @@ function XG_check_line()
             case "$XG_func_status" in
                 none|target)
                     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$1\":\nСтрока: $XG_string_number\nНеоткрытая функция action"$XG_C_END
-		            exit
+                    exit
                 ;;
                 check)
                     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$1\":\nСтрока: $XG_string_number\nНеоткрытая функция check"$XG_C_END
-			        exit
+                    exit
                 ;;
                 action)
                     XG_func+="}"
@@ -147,11 +147,11 @@ function XG_check_line()
                 ;;
                 check)
                     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$1\":\nСтрока: $XG_string_number\nНезакрытая функция check"$XG_C_END
-		            exit
+                    exit
                 ;;
                 action)
                     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$1\":\nСтрока: $XG_string_number\nНезакрытая функция action"$XG_C_END
-			        exit
+                    exit
                 ;;
                     
             esac
@@ -164,34 +164,34 @@ function XG_check_line()
 
 function XG_find_extension()
 {
-	if [ -z "$1" ]; then
-		return 1
-	fi
-	for XG_e in ${XG_EXTENSIONS[@]} target
-	do
+    if [ -z "$1" ]; then
+        return 1
+    fi
+    for XG_e in ${XG_EXTENSIONS[@]} target
+    do
         XG_tmp="$XG_e"_"$1"
-		if [[ -n "${XG_TARGETS[$XG_tmp]}" ]]; then
-			XG_out="$XG_e"
-			return 0
-		fi
-	done
-	return 1
+        if [[ -n "${XG_TARGETS[$XG_tmp]}" ]]; then
+            XG_out="$XG_e"
+            return 0
+        fi
+    done
+    return 1
 }
 
 
 # Function for check completed target
 function XG_target_check()
 {
-	return 1
+    return 1
 }
 
 
 # Function for do target
 function XG_target_action()
 {
-	IFS=""
-	eval "${XG_TARGETS["$1"]}"
-	IFS=" "
+    IFS=""
+    eval "${XG_TARGETS["$1"]}"
+    IFS=" "
 }
 
 
@@ -238,13 +238,13 @@ esac
 # Parsing arguments
 for XG_arg in ${@:2}
 do
-	if [[ "$XG_arg" =~ ^--ext=(.+)$ ]]; then
-		XG_EXTENSIONSFILES+=( "${BASH_REMATCH[1]}" )
-	elif [[ "$XG_arg" =~ ^--([[:alnum:]]+)=(.+)$ ]]; then
-		XG_USERVARIABLES["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
-	elif [[ "$XG_arg" =~ ^.+$ ]]; then
-		XG_USERTARGETS+=( "${BASH_REMATCH[0]}" )
-	fi
+    if [[ "$XG_arg" =~ ^--ext=(.+)$ ]]; then
+        XG_EXTENSIONSFILES+=( "${BASH_REMATCH[1]}" )
+    elif [[ "$XG_arg" =~ ^--([[:alnum:]]+)=(.+)$ ]]; then
+        XG_USERVARIABLES["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+    elif [[ "$XG_arg" =~ ^.+$ ]]; then
+        XG_USERTARGETS+=( "${BASH_REMATCH[0]}" )
+    fi
 done
 
 
@@ -254,10 +254,10 @@ IFS="
 "
 for XG_ef in ${XG_EXTENSIONSFILES[@]}
 do
-	if [ ! -r "$XG_ef" ]; then
-		echo -e $XG_C_ERROR$XG_C_BOLD$XG_C_RED"Файл расширения \"$XG_ef\" не доступен"$XG_C_END
-		exit
-	fi
+    if [ ! -r "$XG_ef" ]; then
+        echo -e $XG_C_ERROR$XG_C_BOLD$XG_C_RED"Файл расширения \"$XG_ef\" не доступен"$XG_C_END
+        exit
+    fi
 done
 IFS=" "
 
@@ -270,16 +270,16 @@ do
     XG_func=""
     XG_func_status="none"
     XG_string_number=1
-	for XG_line in $(cat $XG_ef)
-	do
-		# Extension name parsing
-		if [[ "$XG_line" =~ ^name[[:blank:]]+([[:alpha:]][[:alnum:]]*)[[:blank:]]*$ ]]; then
-			
+    for XG_line in $(cat $XG_ef)
+    do
+        # Extension name parsing
+        if [[ "$XG_line" =~ ^name[[:blank:]]+([[:alpha:]][[:alnum:]]*)[[:blank:]]*$ ]]; then
+            
             # Check if extension name in file declare more than one time
-			if [ -n "$XG_cur_extension" ]; then
-				echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$XG_ef\":\nСтрока: $XG_string_number\nПовторное указание имени расширения"$XG_C_END
-				exit
-			fi
+            if [ -n "$XG_cur_extension" ]; then
+                echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$XG_ef\":\nСтрока: $XG_string_number\nПовторное указание имени расширения"$XG_C_END
+                exit
+            fi
 
             # Check previous directives
             XG_check_line "$XG_ef" none
@@ -287,73 +287,73 @@ do
             XG_func=""
             XG_func_status="none"
 
-			# Check if file have equal extension name with previews extension
-			IFS=" "
-			for XG_ext in ${XG_EXTENSIONS[@]}
-			do
-				if [[ "$XG_ext" == "${BASH_REMATCH[1]}" ]]; then
-					echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$XG_ef\":\nСтрока: $XG_string_number\nДанное расширение уже добавлено"$XG_C_END
-					exit
-				fi
-			done
-			IFS="
+            # Check if file have equal extension name with previews extension
+            IFS=" "
+            for XG_ext in ${XG_EXTENSIONS[@]}
+            do
+                if [[ "$XG_ext" == "${BASH_REMATCH[1]}" ]]; then
+                    echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$XG_ef\":\nСтрока: $XG_string_number\nДанное расширение уже добавлено"$XG_C_END
+                    exit
+                fi
+            done
+            IFS="
 "
-			# Add extension name
-			XG_cur_extension="${BASH_REMATCH[1]}"
-			XG_EXTENSIONS+=( "$XG_cur_extension" )
+            # Add extension name
+            XG_cur_extension="${BASH_REMATCH[1]}"
+            XG_EXTENSIONS+=( "$XG_cur_extension" )
 
-		# Extension check function parsing
-		elif [[ "$XG_line" =~ ^check[[:blank:]]*$ ]]; then
+        # Extension check function parsing
+        elif [[ "$XG_line" =~ ^check[[:blank:]]*$ ]]; then
             
             # Check if extension name doesn't declare
-			if [ -z "$XG_cur_extension" ]; then
-				echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$XG_ef\":\nСтрока: $XG_string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\")" $XG_C_END
-				exit
-			fi
+            if [ -z "$XG_cur_extension" ]; then
+                echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$XG_ef\":\nСтрока: $XG_string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\")" $XG_C_END
+                exit
+            fi
 
-			XG_check_line "$XG_ef" check
+            XG_check_line "$XG_ef" check
             eval "$XG_func"
             XG_func="function XG_""$XG_cur_extension""_check(){"
             XG_func_status="check"
 
         # End of check function parsing        
-		elif [[ "$XG_line" == "endcheck" ]]; then
+        elif [[ "$XG_line" == "endcheck" ]]; then
             
             XG_check_line "$XG_ef" endcheck
             eval "$XG_func"
             XG_func=""
             XG_func_status="none"
 
-		# Extension action function parsing
-		elif [[ "$XG_line" =~ ^action[[:alpha:]]*$ ]]; then
+        # Extension action function parsing
+        elif [[ "$XG_line" =~ ^action[[:alpha:]]*$ ]]; then
             
             # Check if extension name doesn't declare
-			if [ -z "$XG_cur_extension" ]; then
-				echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$XG_ef\":\nСтрока: $XG_string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\"" $XG_C_END
-				exit
-			fi
+            if [ -z "$XG_cur_extension" ]; then
+                echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл \"$XG_ef\":\nСтрока: $XG_string_number\nНеизвестное имя расширения (отсутствует директива \"name ...\"" $XG_C_END
+                exit
+            fi
 
             XG_check_line "$XG_ef" action
             eval "$XG_func"
-			XG_func="function XG_""$XG_cur_extension""_action(){"
+            XG_func="function XG_""$XG_cur_extension""_action(){"
             XG_func_status="action"
 
         # End of action function parsing
-		elif [[ "$XG_line" == "endaction" ]]; then
+        elif [[ "$XG_line" == "endaction" ]]; then
 
-			XG_check_line "$XG_ef" endaction
+            XG_check_line "$XG_ef" endaction
             eval "$XG_func"
             XG_func=""
             XG_func_status="none"
 
-		# If function is writting
-		else
+        # If function is writting
+        else
             XG_check_line "$XG_ef" none
-			XG_func+="$XG_line
+            XG_func+="$XG_line
 "
-		fi
-		XG_string_number=$(expr $XG_string_number + 1)
-	done
+        fi
+        XG_string_number=$(expr $XG_string_number + 1)
+    done
 done
 IFS=" "
 # Check if previous string is a bash function
@@ -362,22 +362,22 @@ eval "$XG_func"
 # Check definition function
 for XG_e in ${XG_EXTENSIONS[@]}
 do
-	if [[ -z $(type "XG_$XG_e""_action") ]]; then
-		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"В расширении $XG_e отсутствует функция выполнения цели"$XG_C_END
-		exit
-	fi
-	if [[ -z $(type "XG_$XG_e""_check") ]]; then
-		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"В расширении $XG_e отсутствует функция проверки цели"$XG_C_END
-		exit
-	fi
+    if [[ -z $(type "XG_$XG_e""_action") ]]; then
+        echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"В расширении $XG_e отсутствует функция выполнения цели"$XG_C_END
+        exit
+    fi
+    if [[ -z $(type "XG_$XG_e""_check") ]]; then
+        echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"В расширении $XG_e отсутствует функция проверки цели"$XG_C_END
+        exit
+    fi
 done
 
 
 
 # Check existing build file
 if [ ! -f "$1" ]; then
-	echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл сборки '$1' не существует"$XG_C_END
-	exit
+    echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл сборки '$1' не существует"$XG_C_END
+    exit
 fi
 # Parsing build file
 XG_extensionslist=$(echo "${XG_EXTENSIONS[@]} target" | sed "s/ /|/g")
@@ -394,58 +394,58 @@ do
     if [[ "$XG_line" =~ ^[[:blank:]]*$ || "$XG_line" =~ ^[[:blank:]]*# ]]; then
         XG_string_number=$(expr $XG_string_number + 1)
         continue
-	# Targets parsing
-	elif [[ "$XG_line" =~ ^($XG_extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)$ ]]; then
-		
+    # Targets parsing
+    elif [[ "$XG_line" =~ ^($XG_extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)$ ]]; then
+        
         # Search for duplicate
-		XG_find_extension ${BASH_REMATCH[2]}
-		if [[ $? -eq 0 ]]; then
-			echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Цель ${BASH_REMATCH[2]} уже была объявлена"$XG_C_END
-			exit
-		fi
+        XG_find_extension ${BASH_REMATCH[2]}
+        if [[ $? -eq 0 ]]; then
+            echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Цель ${BASH_REMATCH[2]} уже была объявлена"$XG_C_END
+            exit
+        fi
         
         # Check line
         XG_check_line "$1" target
-        # If previous strings are target        		
+        # If previous strings are target                
         if [[ "$XG_func_status" == "target" ]]; then
-			XG_TARGETS[$XG_cur_target]="$XG_func"
+            XG_TARGETS[$XG_cur_target]="$XG_func"
         else
             eval "$XG_func"
-		fi
+        fi
         
         XG_func=""
         XG_func_status="target"
-		XG_TARGETSDEPENDS[${BASH_REMATCH[1]}_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
-		XG_cur_target=${BASH_REMATCH[1]}_${BASH_REMATCH[2]}
-	
+        XG_TARGETSDEPENDS[${BASH_REMATCH[1]}_${BASH_REMATCH[2]}]=${BASH_REMATCH[3]}
+        XG_cur_target=${BASH_REMATCH[1]}_${BASH_REMATCH[2]}
+    
     # Targets check functions parsing
-	elif [[ "$XG_line" =~ ^check[[:blank:]]+([[:graph:]]+)[[:blank:]]*$ ]]; then
-		
+    elif [[ "$XG_line" =~ ^check[[:blank:]]+([[:graph:]]+)[[:blank:]]*$ ]]; then
+        
         XG_check_line "$1" check
-        # If previous strings are target        		
+        # If previous strings are target                
         if [[ "$XG_func_status" == "target" ]]; then
-			XG_TARGETS[$XG_cur_target]="$XG_func"
+            XG_TARGETS[$XG_cur_target]="$XG_func"
         else
             eval "$XG_func"
-		fi
+        fi
         
         
         XG_func="function XG_check_${BASH_REMATCH[1]}(){"
         XG_func_status="check"
         XG_TARGETSCHECK+=( ${BASH_REMATCH[1]} )
 
-	elif [[ "$XG_line" == "endcheck" ]]; then
+    elif [[ "$XG_line" == "endcheck" ]]; then
         
-        XG_check_line "$1" endcheck		
-		eval "$XG_func"
-		XG_func=""
-		XG_func_status="none"
+        XG_check_line "$1" endcheck
+        eval "$XG_func"
+        XG_func=""
+        XG_func_status="none"
 
-	# Add strings for target or for check function
-	else
+    # Add strings for target or for check function
+    else
         XG_func+="$XG_line
 "
-	fi
+    fi
     XG_string_number=$(expr $XG_string_number + 1)
 done
 XG_check_line "$1" "$XG_func_status"
@@ -456,39 +456,42 @@ else
 fi
 IFS=" "
 
-# Add targets to list for execute
-for XG_t in ${XG_USERTARGETS[@]}
-do
-	XG_find_extension $XG_t
-	if [[ $? -eq 1 ]]; then
-		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Не найдена цель '$XG_t'"$XG_C_END
-		exit
-	else
-		XG_addtarget "$XG_out"_"$XG_t"
-	fi
-done
-
 
 
 # Add user variables
 for XG_t in ${!XG_USERVARIABLES[@]}
 do
-	eval "$XG_t=\"${XG_USERVARIABLES[$XG_t]}\""
+    eval "$XG_t=\"${XG_USERVARIABLES[$XG_t]}\""
 done
+
+
+
+# Add targets to list for execute
+for XG_t in ${XG_USERTARGETS[@]}
+do
+    XG_find_extension $XG_t
+    if [[ $? -eq 1 ]]; then
+        echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Не найдена цель '$XG_t'"$XG_C_END
+        exit
+    else
+        XG_addtarget "$XG_out"_"$XG_t"
+    fi
+done
+
 
 
 # Do targets
 for XG_t in ${XG_DO[@]}
-do	
-	# Check target argument
-	if [[ "$XG_t" =~ ([[:alnum:]]+)_([[:graph:]]+)$ ]]; then
-		XG_extension=${BASH_REMATCH[1]}
-		XG_target=${BASH_REMATCH[2]}
-	fi
-	echo -e $XG_C_WAIT$XG_C_BOLD"Выполняется цель '$XG_target'"$XG_C_END
+do  
+    # Check target argument
+    if [[ "$XG_t" =~ ([[:alnum:]]+)_([[:graph:]]+)$ ]]; then
+        XG_extension=${BASH_REMATCH[1]}
+        XG_target=${BASH_REMATCH[2]}
+    fi
+    echo -e $XG_C_WAIT$XG_C_BOLD"Выполняется цель '$XG_target'"$XG_C_END
     if [[ -n ${XG_TARGETSUSER[$XG_t]} ]]; then
-		XG_"$XG_extension"_action $XG_t
-	else
+        XG_"$XG_extension"_action $XG_t
+    else
         XG_"$XG_extension"_action $XG_t
     fi
 done
