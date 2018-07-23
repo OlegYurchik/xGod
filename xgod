@@ -4,7 +4,7 @@
 # Identify distribution
 function XG_getDistributionName()
 {
-    XG_out=$(lsb_release -i | sed "s/Distributor\ ID:\  //g")
+    XG_out=$(lsb_release -i | sed "s/^Distributor[[:blank:]]\+ID:[[:blank:]]\+//g")
     XG_out=${XG_out,,}
     return 0
 }
