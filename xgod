@@ -395,7 +395,7 @@ do
         XG_string_number=$(expr $XG_string_number + 1)
         continue
     # Targets parsing
-    elif [[ "$XG_line" =~ ^($XG_extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)$ ]]; then
+    elif [[ "$XG_line" =~ ^($XG_extensionslist)[[:blank:]]+([[:graph:]]+):([[:print:]]*)[[:blank:]]*$ ]]; then
         
         # Search for duplicate
         XG_find_extension ${BASH_REMATCH[2]}
