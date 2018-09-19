@@ -6,11 +6,18 @@ function XG_checkPackageExist()
 	if [ -z "$1" ]; then
 		return 1
 	fi
-	if [[ "$($(echo ${XG_DISTRIBUTION[packagesearch]} | sed "s/%%%/$1/g"))" =~ "$(echo ${XG_DISTRIBUTION[packagesearchexp]} | sed "s/%%%/$1/g")" ]]; then
-		echo -e $XG_C_OK$XG_C_GREEN$XG_C_BOLD"'$1' присутствует в репозитории"$XG_C_END
-		return 0
+
+    XG_command_search=$(echo ${XG_DISTRIBUTION[packagesearch]} | sed "s/%%%/$1/g")
+    XG_name_exp=$(echo ${XG_DISTRIBUTION[packagenameexp]} | sed "s/%%%/$1/g")
+    XG_version_exp=$(echo ${XG_DISTRIBUTION[packageversionexp]} | sed "s/%%%/$2/g") 
+
+	if [[ -n $(echo "$($XG_command_search)" | grep "$XG_name_exp") ]]; then
+        if [[ -z "$2" || -n $(echo "$($XG_command_search)" | grep "$XG_version_exp") ]]; then
+            echo -e "$XG_C_OK$XG_C_GREEN$XG_C_BOLD'$1' присутствует в репозитории$XG_C_END"
+            return 0
+        fi
 	fi
-	echo -e $XG_C_OK$XG_C_RED"'$1' не присутствует в репозитории"$XG_C_END
+	echo -e "$XG_C_OK$XG_C_RED$XG_C_BOLD'$1' не присутствует в репозитории$XG_C_END"
 	return 1
 }
 
@@ -23,25 +30,44 @@ function XG_checkRepo()
 	echo "$XG_founded"
 }
 
-
 function XG_checkInstall()
 {
-	if [[ $($(echo "${XG_DISTRIBUTION[packageisinstall]}" | sed "s/%%%/$1/g")) =~ $(echo "${XG_DISTRIBUTION[packageisinstallexp]}" | sed "s/%%%/$1/g") ]]; then
-		echo -e $XG_C_OK$XG_C_GREEN$XG_C_BOLD"'$1' установлен"$XG_C_END
-		return 0
+    if [ -z "$1" ]; then
+		return 1
 	fi
-	echo -e $XG_C_OK$XG_C_RED$XG_C_BOLD"'$1' не установлен"$XG_C_END
+
+    XG_command_isinstall=$(echo ${XG_DISTRIBUTION[packageisinstall]} | sed "s/%%%/$1/g")
+    XG_name_exp=$(echo ${XG_DISTRIBUTION[packagenameexp]} | sed "s/%%%/$1/g")
+    XG_version_exp=$(echo ${XG_DISTRIBUTION[packageversionexp]} | sed "s/%%%/$2/g") 
+
+	if [[ -n $(echo "$($XG_command_isinstall)" | grep "$XG_name_exp") ]]; then
+		if [[ -z "$2" || -n $(echo "$($XG_command_isinstall)" | grep "$XG_version_exp") ]]; then
+            echo -e "$XG_C_OK$XG_C_GREEN$XG_C_BOLD'$1' установлен$XG_C_END"
+		    return 0
+        fi
+	fi
+	echo -e "$XG_C_OK$XG_C_RED$XG_C_BOLD'$1' не установлен$XG_C_END"
 	return 1
 }
+
+function XG_addRepo()
+{
+    echo -e "$XG_C_WAIT$XG_C_BOLDДобавление репозитория '$1'$XG_C_END"
+    $(echo ${XG_DISTRIBUTION[packagerepoadd]} | sed "s#%%%#$1#g")
+    ${XG_DISTRIBUTION[packageupdate]}
+}
+
 
 # Identify distribution of Linux
 case ${XG_DISTRIBUTION[name]} in
     ubuntu|debian|linuxmint)
 	    XG_DISTRIBUTION[packagesearch]="${XG_DISTRIBUTION[root]} apt-cache show %%%"
-	    XG_DISTRIBUTION[packagesearchexp]="Package: %%%"
-	    XG_DISTRIBUTION[packageisinstall]="${XG_DISTRIBUTION[root]} dpkg -s %%%"
-	    XG_DISTRIBUTION[packageisinstallexp]="Package: %%%"
+	    XG_DISTRIBUTION[packagenameexp]="Package: %%%"
+        XG_DISTRIBUTION[packageversionexp]="Version: %%%"
+        XG_DISTRIBUTION[packageisinstall]="${XG_DISTRIBUTION[root]} dpkg -s %%%"
 	    XG_DISTRIBUTION[packageinstall]="${XG_DISTRIBUTION[root]} apt-get install %%%"
+        XG_DISTRIBUTION[packagerepoadd]="${XG_DISTRIBUTION[root]} add-apt-repository %%%"
+        XG_DISTRIBUTION[packageupdate]="${XG_DISTRIBUTION[root]} apt-get update"
     ;;
 esac
 
@@ -112,23 +138,39 @@ check
 	done
 	IFS=" "
 	if [[ -n "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}" ]]; then
-		XG_checkInstall "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}"
+		XG_checkInstall "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}" "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"version]}"
 		if [[ $? -eq 0 ]]; then
 			return 0
 		fi
-		XG_checkPackageExist "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}"
+		XG_checkPackageExist "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}" "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"version]}"
 		if [[ $? -eq 0 ]]; then
-			return 1;
+			return 1
+		fi
+        if [ -z "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"repo]}" ]; then
+            return 0            
+        fi
+        XG_addRepo "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"repo]}"
+        XG_checkPackageExist "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"name]}" "${XG_PACKAGES[${XG_DISTRIBUTION[name]}"_"version]}"
+		if [[ $? -eq 0 ]]; then
+			return 1
 		fi
 	# If this package exist without distribution name
 	elif [[ -n "${XG_PACKAGES[all_name]}" ]]; then 
-		XG_checkInstall "${XG_PACKAGES[all_name]}"
+		XG_checkInstall "${XG_PACKAGES[all_name]}" "${XG_PACKAGES[all_version]}"
 		if [[ $? -eq 0 ]]; then
 			return 0
 		fi
-        XG_checkPackageExist "${XG_PACKAGES[all_name]}"
+        XG_checkPackageExist "${XG_PACKAGES[all_name]}" "${XG_PACKAGES[all_version]}"
 		if [[ $? -eq 0 ]]; then
-			return 1;
+			return 1
+		fi
+        if [ -z "${XG_PACKAGES[all_repo]}" ]; then
+            return 0
+        fi
+        XG_addRepo "${XG_PACKAGES[all_repo]}"
+        XG_checkPackageExist "${XG_PACKAGES[all_name]}" "${XG_PACKAGES[all_version]}"
+		if [[ $? -eq 0 ]]; then
+			return 1
 		fi
 	else
 		echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Неверная инструкция '$XG_line' в пакете '$1'"$XG_C_END
