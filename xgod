@@ -195,6 +195,11 @@ function XG_target_action()
 }
 
 
+function XG_help()
+{
+    echo "It is help page"
+}
+
 
 # Text factoring
 XG_C_END="\033[0m"
@@ -220,6 +225,7 @@ declare -a XG_EXTENSIONS
 declare -a XG_EXTENSIONSFILES
 declare -a XG_TARGETSCHECK
 declare -a XG_USERTARGETS
+declare -a XG_OPTIONS
 
 # Define script directory
 XG_DIRECTORY=$(realpath "$(dirname "$0")")
@@ -242,6 +248,8 @@ do
         XG_EXTENSIONSFILES+=( "${BASH_REMATCH[1]}" )
     elif [[ "$XG_arg" =~ ^--([[:graph:]]+)=(.+)$ ]]; then
         XG_USERVARIABLES["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+    elif [[ "$XG_arg" =~ ^--([[:graph:]]+)$ ]]; then
+        XG_OPTIONS+=( "${BASH_REMATCH[1]}" )
     elif [[ "$XG_arg" =~ ^.+$ ]]; then
         XG_USERTARGETS+=( "${BASH_REMATCH[0]}" )
     fi
@@ -375,6 +383,10 @@ done
 
 
 # Check existing build file
+if [[ "$1" == "help" ]]; then
+    XG_help
+    exit
+fi
 if [ ! -f "$1" ]; then
     echo -e $XG_C_ERROR$XG_C_RED$XG_C_BOLD"Файл сборки '$1' не существует"$XG_C_END
     exit
@@ -464,8 +476,6 @@ do
     eval "$XG_t=\"${XG_USERVARIABLES[$XG_t]}\""
 done
 
-
-
 # Add targets to list for execute
 for XG_t in ${XG_USERTARGETS[@]}
 do
@@ -478,7 +488,11 @@ do
     fi
 done
 
-
+# Do options
+for XG_option in ${XG_OPTIONS[@]}
+do
+    XG_$XG_option
+done
 
 # Do targets
 for XG_t in ${XG_DO[@]}
